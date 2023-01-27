@@ -15,4 +15,4 @@ This library is a part of the efforts of KG Intelligence to open source our tech
 
 ## Usage
 
-    The library can be installed as a Nuget package: https://www.nuget.org/packages/KGIntelligence.PineCore/.
+The library can be installed as a Nuget package. The nuget package link is [https://www.nuget.org/packages/KGIntelligence.PineCore/](https://www.nuget.org/packages/KGIntelligence.PineCore/).
