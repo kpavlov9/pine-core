@@ -14,7 +14,7 @@
     <PackageIcon>kg_intelligence_logo.png</PackageIcon>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
-    <Description>The library contains useful data structures and utility methods</Description>
+    <Description>The library contains useful data structures and utility methods.</Description>
     <Copyright>Copyright © KG Intelligence 2023</Copyright>
     <PackageTags>utilities data strucutres</PackageTags>
     <PackageReadmeFile>ReadMe.md</PackageReadmeFile>
