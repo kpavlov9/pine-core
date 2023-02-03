@@ -97,8 +97,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var rand = new Random();
             for (uint i = 0; i < bitsLength; i++)
             {
-                bool b = rand.Next() % 2 != 0;
-                bitsBuilder.SetBit(i, b);
+                if(rand.Next() % 2 != 0)
+                {
+                    bitsBuilder.Set(i);
+                }
+                else
+                {
+                    bitsBuilder.Unset(i);
+                }
             }
 
             rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
@@ -119,8 +125,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bits = new BitsBuilder(bitsLength);
             for (uint i = 0; i < bitsLength; i++)
             {
-                bool b = rand.Next() % 2 != 0;
-                bits.SetBit(i, b);
+                if (rand.Next() % 2 != 0)
+                {
+                    bits.Set(i);
+                }
+                else
+                {
+                    bits.Unset(i);
+                }
             }
 
             var rrrBits = new SuccinctBitsRRRBuilder(bits).Build();
@@ -129,8 +141,12 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             Assert.Equal(rrrBitsDiplicate.Size, rrrBits.Size);
             for (nuint i = 0; i < bitsLength; i++)
             {
-                Assert.True(rrrBitsDiplicate.Rank(i, true) == rrrBits.Rank(i, true), $"Failed at {i}.");
-                Assert.True(rrrBitsDiplicate.Rank(i, false) == rrrBits.Rank(i, false), $"Failed at {i}.");
+                Assert.True(
+                    rrrBitsDiplicate.RankSetBits(i) == rrrBits.RankSetBits(i),
+                    $"Failed at {i}.");
+                Assert.True(
+                    rrrBitsDiplicate.RankUnsetBits(i) == rrrBits.RankUnsetBits(i),
+                    $"Failed at {i}.");
             }
         }
 
@@ -155,13 +171,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             for (uint i = 0; i <= values[values.Count - 1]; i++)
             {
-                bits0.SetBit(i, true);
+                bits0.Set(i);
             }
 
             foreach (uint i in values)
             {
-                bits1.SetBit(i, true);
-                bits0.SetBit(i, false);
+                bits1.Set(i);
+                bits0.Unset(i);
             }
 
             var rrrBits1 = new SuccinctBitsRRRBuilder(bits1).Build();
@@ -169,8 +185,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             nuint counter = 0;
             foreach (nuint v in values)
             {
-                Assert.Equal(v, rrrBits1.Select(counter, true));
-                Assert.Equal(v, rrrBits0.Select(counter, false));
+                Assert.Equal(v, rrrBits1.SelectSetBits(counter));
+                Assert.Equal(v, rrrBits0.SelectUnsetBits(counter));
                 counter++;
             }
 
@@ -185,40 +201,52 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 if (b)
                 {
                     values.Add(i);
+                    bits2.Set(i);
                 }
-                bits2.SetBit(i, b);
+                else
+                {
+                    bits2.Unset(i);
+                }
+                
             }
             var rrr2 = new SuccinctBitsRRRBuilder(bits2).Build();
             counter = 0;
             foreach (nuint v in values)
             {
-
-                Assert.Equal(v, rrr2.Select(counter, true));
+                Assert.Equal(v, rrr2.SelectSetBits(counter));
                 counter++;
             }
 
             var bits = new BitsBuilder(length);
             for (uint i = 0; i < length; i++)
             {
-                bool b = rand.Next() % 2 != 0;
-                bits.SetBit(i, b);
+                if(rand.Next() % 2 != 0)
+                {
+                    bits.Set(i);
+                }
+                else
+                {
+                    bits.Unset(i);
+                }
             }
 
             var rrrBits = new SuccinctBitsRRRBuilder(bits).Build();
             var rrrBitsDuplicate = new SuccinctBitsBuilder(bits).Build();
-            Assert.Equal(rrrBitsDuplicate.GetBitsCount(true), rrrBits.GetBitsCount(true));
-            Assert.Equal(rrrBitsDuplicate.GetBitsCount(false), rrrBits.GetBitsCount(false));
+            Assert.Equal(rrrBitsDuplicate.SetBitsCount, rrrBits.SetBitsCount);
+            Assert.Equal(rrrBitsDuplicate.UnsetBitsCount, rrrBits.UnsetBitsCount);
 
-            for (nuint i = 0; i < rrrBits.GetBitsCount(true); i++)
+            for (nuint i = 0; i < rrrBits.SetBitsCount; i++)
             {
-                nuint index1 = rrrBitsDuplicate.Select(i, true);
-                nuint index2 = rrrBits.Select(i, true);
-                Assert.True(index1 == index2, $"Failed at {i}: {index1} <=> {index2}.");
+                nuint index1 = rrrBitsDuplicate.SelectSetBits(i);
+                nuint index2 = rrrBits.SelectSetBits(i);
+                Assert.True(
+                    index1 == index2, $"Failed at {i}: {index1} <=> {index2}.");
             }
-            for (nuint i = 0; i < rrrBits.GetBitsCount(false); i++)
+            for (nuint i = 0; i < rrrBits.UnsetBitsCount; i++)
             {
                 Assert.True(
-                    rrrBitsDuplicate.Select(i, false) == rrrBits.Select(i, false),
+                    rrrBitsDuplicate.SelectUnsetBits(i) ==
+                    rrrBits.SelectUnsetBits(i),
                     $"Failed at {i}.");
             }
         }
@@ -234,8 +262,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var rand = new Random();
             for (uint i = 0; i < iterations; i++)
             {
-                bool b = rand.Next() % 2 != 0;
-                bitsBuilder.SetBit(i, b);
+                if (rand.Next() % 2 != 0)
+                {
+                    bitsBuilder.Set(i);
+                }
+                else
+                {
+                    bitsBuilder.Unset(i);
+                }
             }
 
             var rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();

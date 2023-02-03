@@ -26,13 +26,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             _bv0Builder = new SuccinctBitsBuilder();
             for (nuint i = 0; i <= _values[_values.Count - 1]; i++)
             {
-                _bv0Builder.Set(i, true);
+                _bv0Builder.Set(i);
             }
 
             foreach (var i in _values)
             {
-                _bv1Builder.Set(i, true);
-                _bv0Builder.Set(i, false);
+                _bv1Builder.Set(i);
+                _bv0Builder.Unset(i);
             }
 
             _bits1 = _bv1Builder.Build();
@@ -43,9 +43,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         public void size()
         {
             Assert.Equal(_values[_values.Count - 1] + 1, _bits1.Size);
-            Assert.Equal((nuint)_values.Count, _bits1.GetBitsCount(true));
+            Assert.Equal((nuint)_values.Count, _bits1.SetBitsCount);
             Assert.Equal(_values[_values.Count - 1] + 1, _bits0.Size);
-            Assert.Equal((nuint)_values.Count, _bits0.GetBitsCount(false));
+            Assert.Equal((nuint)_values.Count, _bits0.UnsetBitsCount);
         }
 
         [Fact]
@@ -62,7 +62,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         public void rank_before_build()
         {
             var bits = new SuccinctBits();
-            Assert.Throws<IndexOutOfRangeException>(() => bits.Rank(100, true));
+            Assert.Throws<IndexOutOfRangeException>(() => bits.RankSetBits(100));
         }
 
         [Fact]
@@ -71,8 +71,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             nuint ranksCount = 0;
             foreach (var v in _values)
             {
-                Assert.Equal(ranksCount, _bits1.Rank(v, true));
-                Assert.Equal(ranksCount, _bits0.Rank(v, false));
+                Assert.Equal(ranksCount, _bits1.RankSetBits(v));
+                Assert.Equal(ranksCount, _bits0.RankUnsetBits(v));
                 ranksCount++;
             }
         }
@@ -83,8 +83,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             nuint positionsCount = 0;
             foreach (nuint v in _values)
             {
-                Assert.Equal(v, _bits1.Select(positionsCount, true));
-                Assert.Equal(v, _bits0.Select(positionsCount, false));
+                Assert.Equal(v, _bits1.SelectSetBits(positionsCount));
+                Assert.Equal(v, _bits0.SelectUnsetBits(positionsCount));
                 positionsCount++;
             }
         }
@@ -93,32 +93,43 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         public void selectBefore_build()
         {
             var bv = new SuccinctBits();
-            Assert.Throws<ArgumentOutOfRangeException>(() => bv.Select(100, true));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => bv.SelectSetBits(100));
         }
 
         [Fact]
         public void get_boundary()
         {
-            Assert.Throws<IndexOutOfRangeException>(() => _bits1.GetBit(_bits1.Size));
-            Assert.Throws<IndexOutOfRangeException>(() => _bits0.GetBit(_bits0.Size));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits1.GetBit(_bits1.Size));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits0.GetBit(_bits0.Size));
         }
 
         [Fact]
         public void rank_boundary()
         {
-            Assert.Throws<IndexOutOfRangeException>(() => _bits1.Rank(_bits0.Size + 1, false));
-            Assert.Throws<IndexOutOfRangeException>(() => _bits1.Rank(_bits0.Size + 1, true));
-            Assert.Throws<IndexOutOfRangeException>(() => _bits1.Rank(_bits1.Size + 1, false));
-            Assert.Throws<IndexOutOfRangeException>(() => _bits1.Rank(_bits1.Size + 1, true));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits1.RankUnsetBits(_bits0.Size + 1));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits1.RankSetBits(_bits0.Size + 1));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits1.RankUnsetBits(_bits1.Size + 1));
+            Assert.Throws<IndexOutOfRangeException>(
+                () => _bits1.RankSetBits(_bits1.Size + 1));
         }
 
         [Fact]
         public void select_boundary()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => _bits1.Select(_bits1.GetBitsCount(true), true));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _bits1.Select(_bits1.GetBitsCount(false), false));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _bits0.Select(_bits0.GetBitsCount(true), true));
-            Assert.Throws<ArgumentOutOfRangeException>(() => _bits0.Select(_bits0.GetBitsCount(false), false));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => _bits1.SelectSetBits(_bits1.SetBitsCount));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => _bits1.SelectUnsetBits(_bits1.UnsetBitsCount));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => _bits0.SelectSetBits(_bits0.SetBitsCount));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => _bits0.SelectUnsetBits(_bits0.UnsetBitsCount));
         }
 
         [Fact]
@@ -132,8 +143,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bits1Clone = SuccinctBits.Read(new BinaryReader(stream1));
 
             Assert.Equal(_bits1.Size, bits1Clone.Size);
-            Assert.Equal(_bits1.GetBitsCount(true), bits1Clone.GetBitsCount(true));
-            Assert.Equal(_bits1.GetBitsCount(false), bits1Clone.GetBitsCount(false));
+            Assert.Equal(_bits1.SetBitsCount, bits1Clone.SetBitsCount);
+            Assert.Equal(_bits1.UnsetBitsCount, bits1Clone.UnsetBitsCount);
             for (nuint i = 0; i < _bits1.Size; i++)
             {
                 Assert.Equal(_bits1.GetBit(i), bits1Clone.GetBit(i));
@@ -147,8 +158,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bv0Clone = SuccinctBits.Read(new BinaryReader(stream0));
 
             Assert.Equal(_bits0.Size, bv0Clone.Size);
-            Assert.Equal(_bits0.GetBitsCount(true), bv0Clone.GetBitsCount(true));
-            Assert.Equal(_bits0.GetBitsCount(false), bv0Clone.GetBitsCount(false));
+            Assert.Equal(_bits0.SetBitsCount, bv0Clone.SetBitsCount);
+            Assert.Equal(_bits0.UnsetBitsCount, bv0Clone.UnsetBitsCount);
 
             for (nuint i = 0; i < _bits0.Size; i++)
             {
@@ -164,8 +175,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var rand = new Random();
             for (uint i = 0; i < length; i++)
             {
-                bool b = rand.Next() % 2 != 0;
-                bitsBuilder.SetBit(i, b);
+                if(rand.Next() % 2 != 0)
+                {
+                    bitsBuilder.Set(i);
+                }
+                else
+                {
+                    bitsBuilder.Unset(i);
+                }
             }
 
             var succinctBitsBuilder = new SuccinctBitsBuilder(bitsBuilder);
@@ -197,10 +214,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (nuint i = 0; i < count; i++)
             {
                 Assert.True(bits1.GetBit(i) == bits2.GetBit(i), $"Failed at {i}.");
-                Assert.True(bits1.Select(i, true) == bits2.Select(i, true), $"Failed at {i}.");
-                Assert.True(bits1.Select(i, false) == bits2.Select(i, false), $"Failed at {i}.");
-                Assert.True(bits1.Rank(i, true) == bits2.Rank(i, true), $"Failed at {i}.");
-                Assert.True(bits1.Rank(i, false) == bits2.Rank(i, false), $"Failed at {i}.");
+                Assert.True(bits1.SelectSetBits(i) == bits2.SelectSetBits(i), $"Failed at {i}.");
+                Assert.True(bits1.SelectUnsetBits(i) == bits2.SelectUnsetBits(i), $"Failed at {i}.");
+                Assert.True(bits1.RankSetBits(i) == bits2.RankSetBits(i), $"Failed at {i}.");
+                Assert.True(bits1.RankUnsetBits(i) == bits2.RankUnsetBits(i), $"Failed at {i}.");
             }
         }
     }

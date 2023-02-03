@@ -64,13 +64,13 @@ namespace PinusTests.units.PinusCore
 
             var resultedUIntReversedBits = RankOfReversed(
                 value: uintValue,
-                position: uIntPosition,
-                forSetBits: true, blockSize: 32);
+                bitPositionCutoff: uIntPosition,
+                blockSize: 32);
 
             var resultedULongReversedBits = RankOfReversed(
                 value: ulongValue,
-                position: uLongPosition,
-                forSetBits: true, blockSize: 64);
+                bitPositionCutoff: uLongPosition,
+                blockSize: 64);
 
             Assert.True(expectedUIntRank == resultedUIntReversedBits);
             Assert.True(expectedULongRank == resultedULongReversedBits);
@@ -95,14 +95,14 @@ namespace PinusTests.units.PinusCore
         {
 
             var resultedUIntReversedBits = RankOfReversed(
-                value: uintValue,
-                position: uIntPosition,
-                forSetBits: false, blockSize: 32);
+                value: ~uintValue,
+                bitPositionCutoff: uIntPosition,
+                blockSize: 32);
 
             var resultedULongReversedBits = RankOfReversed(
-                value: ulongValue,
-                position: uLongPosition,
-                forSetBits: false, blockSize: 64);
+                value: ~ulongValue,
+                bitPositionCutoff: uLongPosition,
+                blockSize: 64);
 
             Assert.True(expectedUIntRank == resultedUIntReversedBits);
             Assert.True(expectedULongRank == resultedULongReversedBits);
@@ -127,13 +127,13 @@ namespace PinusTests.units.PinusCore
 
             var resultedUIntReversedBits = Rank(
                 value: uintValue,
-                position: uIntPosition,
-                forSetBits: true, blockSize: 32);
+                bitPositionCutoff: uIntPosition,
+                blockSize: 32);
 
             var resultedULongReversedBits = Rank(
                 value: ulongValue,
-                position: uLongPosition,
-                forSetBits: true, blockSize: 64);
+                bitPositionCutoff: uLongPosition,
+                blockSize: 64);
 
             Assert.True(expectedUIntRank == resultedUIntReversedBits);
             Assert.True(expectedULongRank == resultedULongReversedBits);
@@ -157,14 +157,14 @@ namespace PinusTests.units.PinusCore
         {
 
             var resultedUIntReversedBits = Rank(
-                value: uintValue,
-                position: uIntPosition,
-                forSetBits: false, blockSize: 32);
+                value: ~uintValue,
+                bitPositionCutoff: uIntPosition,
+                blockSize: 32);
 
             var resultedULongReversedBits = Rank(
-                value: ulongValue,
-                position: uLongPosition,
-                forSetBits: false, blockSize: 64);
+                value: ~ulongValue,
+                bitPositionCutoff: uLongPosition,
+                blockSize: 64);
 
             Assert.True(expectedUIntRank == resultedUIntReversedBits);
             Assert.True(expectedULongRank == resultedULongReversedBits);
@@ -204,13 +204,11 @@ namespace PinusTests.units.PinusCore
         {
             var resultedUIntBits = Select(
                 value: uintValue,
-                i: uIntPosition,
-                forSetBits: true);
+                bitCountCutoff: uIntPosition);
 
             var resultedULongBits = Select(
                 value: ulongValue,
-                i: uLongPosition,
-                forSetBits: true);
+                bitCountCutoff: uLongPosition);
 
             Assert.True(expectedUIntSelect == resultedUIntBits);
             Assert.True(expectedULongSelect == resultedULongBits);
@@ -256,14 +254,12 @@ namespace PinusTests.units.PinusCore
             int expectedULongSelect)
         {
             var resultedUIntBits = Select(
-                value: uintValue,
-                i: uIntPosition,
-                forSetBits: false);
+                value: ~uintValue,
+                bitCountCutoff: uIntPosition);
 
             var resultedULongBits = Select(
-                value: ulongValue,
-                i: uLongPosition,
-                forSetBits: false);
+                value: ~ulongValue,
+                bitCountCutoff: uLongPosition);
 
             Assert.True(expectedUIntSelect == resultedUIntBits);
             Assert.True(expectedULongSelect == resultedULongBits);
@@ -301,13 +297,11 @@ namespace PinusTests.units.PinusCore
         {
             var resultedUIntReversedBits = SelectOfReversed(
                 value: uintValue,
-                i: uIntPosition,
-                forSetBits: true);
+                bitCountCutoff: uIntPosition);
 
             var resultedULongReversedBits = SelectOfReversed(
                 value: ulongValue,
-                i: uLongPosition,
-                forSetBits: true);
+                bitCountCutoff: uLongPosition);
 
             Assert.True(expectedUIntSelect == resultedUIntReversedBits);
             Assert.True(expectedULongSelect == resultedULongReversedBits);
@@ -331,14 +325,12 @@ namespace PinusTests.units.PinusCore
             int expectedULongSelection)
         {
             var resultedUIntReversedBits = SelectOfReversed(
-                value: uintValue,
-                i: uIntPosition,
-                forSetBits: false);
+                value: ~uintValue,
+                bitCountCutoff: uIntPosition);
 
             var resultedULongReversedBits = SelectOfReversed(
-                value: ulongValue,
-                i: uLongPosition,
-                forSetBits: false);
+                value: ~ulongValue,
+                bitCountCutoff: uLongPosition);
 
             Assert.True(expectedUIntSelection == resultedUIntReversedBits);
             Assert.True(expectedULongSelection == resultedULongReversedBits);

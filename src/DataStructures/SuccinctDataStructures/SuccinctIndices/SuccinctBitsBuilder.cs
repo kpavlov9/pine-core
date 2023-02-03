@@ -4,8 +4,10 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
+using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using System.Threading.Tasks;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices
 {
@@ -15,11 +17,6 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
     /// </summary>
     public sealed class SuccinctBitsBuilder
     {
-        internal static readonly int SmallBlockSize = NativeBitCount;
-        internal const int BlockRate = 8;
-        internal static readonly int LargeBlockSize = SmallBlockSize * BlockRate;
-        private static readonly uint BytesCountInValue = (uint)NativeBitCount / BitCountInByte;
-
         private readonly List<nuint> _values;
         private readonly List<nuint> _ranks;
         private nuint _size;
@@ -55,7 +52,11 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 
         public SuccinctBitsBuilder(nuint size)
         {
-            _values = new List<nuint>(new nuint[(int)((size + NativeBitCountMinusOne) / NativeBitCount)]);
+            _values =
+                new List<nuint>(
+                    new nuint[
+                        (int)((size + NativeBitCountMinusOne) / NativeBitCount)
+                        ]);
             _ranks = new List<nuint>();
             _size = 0;
             _setBitsCount = 0;
@@ -96,29 +97,69 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool GetBit(nuint i)
+        public bool GetBit(nuint position)
         {
-            if (i >= _size)
+            if (position >= _size)
             {
                 throw new IndexOutOfRangeException(
-                    $"The argument {i} exceeds the sequence length {_size}");
+                    $@"The argument {nameof(position)}
+ exceeds the sequence length {_size}");
             }
-            int qSmall = (int)i / SmallBlockSize;
-            int rSmall = (int)i % SmallBlockSize;
-            nuint m = NUIntOne << rSmall;
-            return (_values[qSmall] & m) != 0;
+
+            GetBlockPositions(
+                position,
+                out int qSmall,
+                out int rSmall);
+
+            GetMask(rSmall, out var mask);
+            return (_values[qSmall] & mask) != 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SuccinctBitsBuilder Set(nuint i, bool forSetBits)
+        public SuccinctBitsBuilder Set(nuint position)
         {
-            if (i >= _size) { _size = i + 1; }
-            int qSmall = (int)i / SmallBlockSize;
-            int rSmall = (int)i % SmallBlockSize;
-            while (qSmall >= _values.Count) { _values.Add(0); }
-            nuint m = NUIntOne << rSmall;
+            if(position >= _size)
+            {
+                _size = position + 1;
+            }
 
-            _values[qSmall] = forSetBits ? _values[qSmall] | m : _values[qSmall] & ~m;
+            GetBlockPositions(
+                position,
+                out int qSmall,
+                out int rSmall);
+
+            while (qSmall >= _values.Count)
+            {
+                _values.Add(0);
+            }
+
+            GetMask(rSmall, out var mask);
+
+            _values[qSmall] = _values[qSmall] | mask;
+
+            return this;
+        }
+
+        public SuccinctBitsBuilder Unset(nuint position)
+        {
+            if (position >= _size)
+            {
+                _size = position + 1;
+            }
+
+            GetBlockPositions(
+                position,
+                out int qSmall,
+                out int rSmall);
+
+            while (qSmall >= _values.Count)
+            {
+                _values.Add(0);
+            }
+
+            GetMask(rSmall, out var mask);
+
+            _values[qSmall] = _values[qSmall] & ~mask;
 
             return this;
         }
@@ -136,8 +177,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 }
                 _setBitsCount += unchecked((nuint)RankOfReversed(
                     value: _values[i],
-                    position: SmallBlockSize,
-                    forSetBits: true,
+                    bitPositionCutoff: SmallBlockSize,
                     blockSize: SmallBlockSize));
             }
 

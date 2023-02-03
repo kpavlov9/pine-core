@@ -81,40 +81,35 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int RankOfReversed(
             ulong value,
-            int position,
-            bool forSetBits,
+            int bitPositionCutoff,
             int blockSize = LongBitSize)
         {
-            if (!forSetBits) { value = ~value; }
-            value <<= blockSize - position;
+            value <<= blockSize - bitPositionCutoff;
             return BitOperations.PopCount(value);
         }
 
         /// <summary>
-        /// Returns the count of set or unset bits up to the given position
+        /// Returns the count of set bits up to the given position
         /// starting from the least important bit.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int RankOfReversed(
             uint value,
-            int position,
-            bool forSetBits,
+            int bitPositionCutoff,
             int blockSize = IntBitSize)
         {
-            if (!forSetBits) { value = ~value; }
-            value <<= blockSize - position;
+            value <<= blockSize - bitPositionCutoff;
             return BitOperations.PopCount(value);
         }
 
 
         /// <summary>
-        /// Returns the index position of the i-th consecutive set or unset bit
+        /// Returns the index position of the i-th consecutive set bit
         /// starting from the most important bits.
         /// </summary>
-        public static uint Select(ulong value, int i, bool forSetBits)
+        public static uint Select(ulong value, int bitCountCutoff)
         {
             value = ReverseBits(value);
-            if (!forSetBits) { value = ~value; }
 
             ulong pop2 = ((value & 0xaaaaaaaaaaaaaaaaUL) >> 1)
                         + (value & 0x5555555555555555UL);
@@ -129,7 +124,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             ulong pop64 = (pop32 >> 32 & 0x000000000000ffffUL)
                         + (pop32 & 0x000000000000ffffUL);
 
-            ulong iUL = (ulong)i;
+            ulong iUL = (ulong)bitCountCutoff;
 
             if (iUL++ >= pop64)
             {// Edge case when first 32 bits are set and 'i' is 31.
@@ -156,12 +151,11 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
 
         /// <summary>
-        /// Returns the index position of the i-th consecutive set or unset bit
+        /// Returns the index position of the i-th consecutive set bit
         /// starting from the least important bits.
         /// </summary>
-        public static uint SelectOfReversed(ulong value, int i, bool forSetBits)
+        public static uint SelectOfReversed(ulong value, int bitCountCutoff)
         {
-            if (!forSetBits) { value = ~value; }
             ulong pop2 = ((value & 0xaaaaaaaaaaaaaaaaUL) >> 1)
                         + (value & 0x5555555555555555UL);
             ulong pop4 = ((pop2 & 0xccccccccccccccccUL) >> 2)
@@ -175,7 +169,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             ulong pop64 = (pop32 >> 32 & 0x000000000000ffffUL)
                         + (pop32 & 0x000000000000ffffUL);
 
-            ulong iUL = (ulong)i;
+            ulong iUL = (ulong)bitCountCutoff;
 
             if (iUL++ >= pop64)
             {// Edge case when first 32 bits are set and 'i' is 31.
@@ -201,16 +195,12 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns the index position of the i-th consecutive set or unset bit
+        /// Returns the index position of the i-th consecutive set bit
         /// starting from the most important bits.
         /// </summary>
-        public static uint Select(uint value, int i, bool forSetBits)
+        public static uint Select(uint value, int bitCountCutoff)
         {
             value = ReverseBits(value);
-            if (!forSetBits)
-            {
-                value = ~value;
-            }
 
             uint pop2 = (value & 0x55555555u) + (value >> 1 & 0x55555555u);
             uint pop4 = (pop2 & 0x33333333u) + (pop2 >> 2 & 0x33333333u);
@@ -218,7 +208,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             uint pop16 = (pop8 & 0x00ff00ffu) + (pop8 >> 8 & 0x00ff00ffu);
             uint pop32 = (pop16 & 0x000000ffu) + (pop16 >> 16 & 0x000000ffu);
 
-            uint iUI = (uint)i;
+            uint iUI = (uint)bitCountCutoff;
 
             if (iUI++ >= pop32)
             {// Edge case when first 16 bits are set and 'i' is 15.
@@ -247,26 +237,20 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns the index position of the i-th consecutive set or unset bit
+        /// Returns the index position of the i-th consecutive set bit
         /// starting from the least important bits.
         /// </summary>
         /// <param name="value">The value in which we do the counting.</param>
-        /// <param name="i">The index position up to which we count the bits.</param>
-        /// <param name="forSetBits">If 'true', we count the 1s, if false, we count the 0s.</param>
-        public static uint SelectOfReversed(uint value, int i, bool forSetBits)
+        /// <param name="bitCountCutoff">The index position up to which we count the bits.</param>
+        public static uint SelectOfReversed(uint value, int bitCountCutoff)
         {
-            if (!forSetBits)
-            {
-                value = ~value;
-            }
-
             uint pop2 = (value & 0x55555555u) + (value >> 1 & 0x55555555u);
             uint pop4 = (pop2 & 0x33333333u) + (pop2 >> 2 & 0x33333333u);
             uint pop8 = (pop4 & 0x0f0f0f0fu) + (pop4 >> 4 & 0x0f0f0f0fu);
             uint pop16 = (pop8 & 0x00ff00ffu) + (pop8 >> 8 & 0x00ff00ffu);
             uint pop32 = (pop16 & 0x000000ffu) + (pop16 >> 16 & 0x000000ffu);
 
-            uint iUI = (uint)i;
+            uint iUI = (uint)bitCountCutoff;
 
             if (iUI++ >= pop32)
             {// Edge case when first 16 bits are set and 'i' is 15.
@@ -295,34 +279,30 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns the count of set or unset bits up to the given position
+        /// Returns the count of set bits up to the given position
         /// starting from the most important bit.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Rank(
             ulong value,
-            int position,
-            bool forSetBits,
+            int bitPositionCutoff,
             int blockSize = LongBitSize)
         {
-            if (!forSetBits) { value = ~value; }
-            value >>= blockSize - position;
+            value >>= blockSize - bitPositionCutoff;
             return BitOperations.PopCount(value);
         }
 
         /// <summary>
-        /// Returns the count of set or unset bits up to the given position
+        /// Returns the count of set bits up to the given position
         /// starting from the most important bit.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Rank(
             uint value,
-            int position,
-            bool forSetBits,
+            int bitPositionCutoff,
             int blockSize = IntBitSize)
         {
-            if (!forSetBits) { value = ~value; }
-            value >>= blockSize - position;
+            value >>= blockSize - bitPositionCutoff;
             return BitOperations.PopCount(value);
         }
     }

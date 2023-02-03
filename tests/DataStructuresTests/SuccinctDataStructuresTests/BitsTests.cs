@@ -51,7 +51,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         {
             var bitsBuilder = new BitsBuilder(128);
 
-            bitsBuilder.SetBit(64, true);
+            bitsBuilder.Set(64);
             var bits = bitsBuilder.Build();
             Assert.True(bits.GetBit(64));
 
@@ -61,10 +61,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             for (uint i = 0; i < 128; i++)
             {
-                bitsBuilder.SetBit(i, true);
+                bitsBuilder.Set(i);
             }
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => bitsBuilder.SetBit(128, true));
+            Assert.Throws<ArgumentOutOfRangeException>(() => bitsBuilder.Set(128));
 
             bits = bitsBuilder.Build();
 
@@ -83,7 +83,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             for (var i = 0; i < 15; i++)
             {
-                bitsBuilder.AddBits(true, 100);
+                bitsBuilder.AddSetBits(100);
             }
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);
@@ -106,7 +106,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             for (int i = 0; i < 15; i++)
             {
-                bitsBuilder.AddBits(false, 100);
+                bitsBuilder.AddUnsetBits(100);
             }
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);

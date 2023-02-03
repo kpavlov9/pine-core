@@ -4,10 +4,11 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
+
+using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitsBuilderHelper;
-using KGIntelligence.PineCore.Helpers.Utilities;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices
 {
@@ -69,7 +70,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
             for (var i = cutoff; i < bits.Length; i++)
             {
-                Push(bits[i], BitCountInByte);
+                Add(bits[i], BitCountInByte);
             }
         }
 
@@ -94,29 +95,6 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         public Bits Build()
         {
             return new Bits(_position, _data.ToImmutableArray());
-        }
-
-        public BitsBuilder SetBit(uint position, bool forSetBits)
-        {
-            int indexInList = (int)(position / NativeBitCount);
-            int offset = (int)(position % NativeBitCount);
-            nuint block = _data[indexInList];
-            nuint mask = NUIntOne << NativeBitCountMinusOne - offset;
-            if (forSetBits)
-            {
-                block |= mask;
-            }
-            else
-            {
-                block &= ~mask;
-            }
-            _data[indexInList] = block;
-
-            if (position + 1 >= _position)
-            {
-                _position = position + 1;
-            }
-            return this;
         }
 
         public BitsBuilder Set(uint position)
@@ -205,13 +183,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return this;
         }
 
-        public BitsBuilder Push(ulong bits, int bitsCount)
+        public BitsBuilder Add(ulong bits, int bitsCount)
         {
             this.PushNative(bits, bitsCount);
             return this;
         }
 
-        public BitsBuilder Push(uint bits, int bitsCount)
+        public BitsBuilder Add(uint bits, int bitsCount)
         {
             return AddBits((nuint)bits, bitsCount);
         }
@@ -220,7 +198,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         {
             foreach (byte value in values)
             {
-                Push(value, sizeof(byte) * 8);
+                Add(value, sizeof(byte) * 8);
             }
             return this;
         }
@@ -261,14 +239,11 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return this;
         }
 
-        public BitsBuilder AddBits(bool forSetBits, int bitsCount)
-        {
-            return forSetBits ? AddSetBits(bitsCount) : AddUnsetBits(bitsCount);
-        }
 
-        public BitsBuilder Push(bool forSetBits)
+
+        public BitsBuilder Add(bool bitValue)
         {
-            return forSetBits ? AddSetBits(1) : AddUnsetBits(1);
+            return bitValue ? AddSetBits(1) : AddUnsetBits(1);
         }
 
         public IList<nuint> GetData()

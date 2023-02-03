@@ -135,9 +135,9 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             return this;
         }
 
-        public void Push(bool forSetBits)
+        public void Add(bool forSetBits)
         {
-            _bits.Push(forSetBits);
+            _bits.Add(forSetBits);
         }
 
         public void Set(uint position)
@@ -211,7 +211,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 var position = i * BlockSize;
                 var block = bits.FetchBits(position, BlockSize);
                 var @class = PopCount(block);
-                classValuesBuilder.Push(@class, BitsPerClass);
+                classValuesBuilder.Add(@class, BitsPerClass);
 
                 var offset = OffsetOf(block, @class);
                 offsetValuesBuilder.AddBits(offset, (int)ClassBitOffsets[@class]);

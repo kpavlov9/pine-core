@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
+using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.Bits;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices.SuccinctBitsBuilder;
@@ -35,81 +36,155 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             _ranks = ranks;
         }
 
-        public bool GetBit(nuint i)
+        public bool GetBit(nuint position)
         {
-            if (i >= _size)
-            {
-                throw new IndexOutOfRangeException(
-                    @$"The argument '{nameof(i)}' with value '{i}'
- exceeds the vector length {_size}."
-                    );
-            }
+            ValidatePosition(
+                position: position,
+                size: _size);
 
-            int qSmall = (int)i / SmallBlockSize;
-            int rSmall = (int)i % SmallBlockSize;
-            nuint m = NUIntOne << rSmall;
-            return (_values[qSmall] & m) != 0;
+            GetBlockPositions(
+                position,
+                out int qSmall,
+                out int rSmall);
+
+            GetMask(rSmall, out var mask);
+            return (_values[qSmall] & mask) != 0;
         }
 
-        public nuint GetBitsCount(bool forSetBits)
-            => forSetBits ? _setBitsCount : _size - _setBitsCount;
+        public nuint SetBitsCount
+            => _setBitsCount;
 
-        public nuint Rank(nuint i, bool forSetBits)
+        public nuint UnsetBitsCount
+            => _size - _setBitsCount;
+
+        public nuint RankSetBits(nuint bitPositionCutoff)
         {
-            if (i > _size)
+            ValidatePosition(position: bitPositionCutoff, size: _size);
+
+            nuint rank = 0;
+
+            if (bitPositionCutoff == 0)
             {
-                throw new IndexOutOfRangeException(
-                    @$"The argument '{nameof(i)}' with value '{i}'
- exceeds the vector length {_size}."
-                    );
+                return rank;
             }
 
-            if (i == 0)
+            bitPositionCutoff--;
+
+            CalculateInitialRank(
+                values: _values,
+                ranks: _ranks,
+                bitPositionCutoff: bitPositionCutoff,
+                rank: ref rank,
+                qLarge: out var qLarge);
+
+            CalculateRankSetBits(
+                values: _values,
+                bitPositionCutoff: bitPositionCutoff,
+                qLarge: qLarge,
+                rank: ref rank);
+
+            return rank;
+        }
+
+        public nuint RankUnsetBits(nuint bitPositionCutoff)
+        {
+            ValidatePosition(position: bitPositionCutoff, size: _size);
+
+            nuint rank = 0;
+
+            if (bitPositionCutoff == 0)
             {
-                return 0;
+                return rank;
             }
 
-            i--;
+            bitPositionCutoff--;
 
-            var qLarge = (int)i / LargeBlockSize;
-            var qSmall = (int)i / SmallBlockSize;
-            int rSmall = (int)i % SmallBlockSize;
+            CalculateInitialRank(
+                values: _values,
+                ranks: _ranks,
+                bitPositionCutoff: bitPositionCutoff,
+                rank: ref rank,
+                qLarge: out var qLarge);
 
-            nuint rank = _ranks[qLarge];
-            if (!forSetBits)
-            {
-                rank = (nuint)(qLarge * LargeBlockSize) - rank;
-            }
+            CalculateRankUnsetBits(
+                values: _values,
+                bitPositionCutoff: bitPositionCutoff,
+                qLarge: qLarge,
+                rank: ref rank);
+
+            return rank;
+        }
+
+        private static void CalculateInitialRank(
+            ImmutableArray<nuint> values,
+            ImmutableArray<nuint> ranks,
+            nuint bitPositionCutoff,
+            ref nuint rank,
+            out int qLarge)
+        {
+            qLarge = (int)bitPositionCutoff / LargeBlockSize;
+            rank = ranks[qLarge];
+        }
+
+        private static void CalculateRankSetBits(
+            ImmutableArray<nuint> values,
+            nuint bitPositionCutoff,
+            int qLarge,
+            ref nuint rank)
+        {
+            GetBlockPositions(
+                 position: bitPositionCutoff,
+                 qSmall: out var qSmall,
+                 rSmall: out var rSmall);
 
             var begin = qLarge * BlockRate;
 
             for (var j = begin; j < qSmall; j++)
             {
                 rank += unchecked((uint)RankOfReversed(
-                    value: _values[j],
-                    position: SmallBlockSize,
-                    forSetBits: forSetBits,
+                    value: values[j],
+                    bitPositionCutoff: SmallBlockSize,
                     blockSize: SmallBlockSize));
             }
 
             rank += unchecked((uint)RankOfReversed(
-                value: _values[qSmall],
-                position: rSmall + 1,
-                forSetBits: forSetBits,
+                value: values[qSmall],
+                bitPositionCutoff: rSmall + 1,
                 blockSize: SmallBlockSize));
-
-            return rank;
         }
 
-        public nuint Select(nuint i, bool forSetBits)
+        private static void CalculateRankUnsetBits(
+            ImmutableArray<nuint> values,
+            nuint bitPositionCutoff,
+            int qLarge,
+            ref nuint rank)
         {
-            if (i >= GetBitsCount(forSetBits))
+            GetBlockPositions(
+                position: bitPositionCutoff,
+                qSmall: out var qSmall,
+                rSmall: out var rSmall);
+
+            var begin = qLarge * BlockRate;
+
+            rank = (nuint)(qLarge * LargeBlockSize) - rank;
+
+            for (var j = begin; j < qSmall; j++)
             {
-                throw new ArgumentOutOfRangeException(
-                    @$"The argument '{nameof(i)}' with value '{i}' exceeds
- the vector length {GetBitsCount(forSetBits)}."
-                );
+                rank += unchecked((uint)RankOfReversed(
+                    value: ~values[j],
+                    bitPositionCutoff: SmallBlockSize,
+                    blockSize: SmallBlockSize));
             }
+
+            rank += unchecked((uint)RankOfReversed(
+                value: ~values[qSmall],
+                bitPositionCutoff: rSmall + 1,
+                blockSize: SmallBlockSize));
+        }
+
+        public nuint SelectSetBits(nuint bitCountCutoff)
+        {
+            ValidateBitCountCutoff(bitCountCutoff, SetBitsCount);
 
             var ranks = _ranks;
             int left = 0;
@@ -118,34 +193,82 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             {
                 int pivot = left + right >> 1; // / 2;
                 nuint rank = ranks[pivot];
-                if (!forSetBits) { rank = (nuint)(pivot * LargeBlockSize) - rank; }
-                if (i < rank) { right = pivot; }
-                else { left = pivot + 1; }
+
+                if (bitCountCutoff < rank)
+                {
+                    right = pivot;
+                }
+                else
+                {
+                    left = pivot + 1;
+                }
             }
             right--;
 
-            if (forSetBits) { i -= ranks[right]; }
-            else { i -= (nuint)(right * LargeBlockSize) - ranks[right]; }
+            bitCountCutoff -= ranks[right];
             int j = right * BlockRate;
             while (true)
             {
                 uint rank = unchecked((uint)RankOfReversed(
                     _values[j],
                     SmallBlockSize,
-                    forSetBits,
                     SmallBlockSize));
 
-                if (i < rank) { break; }
+                if (bitCountCutoff < rank)
+                {
+                    break;
+                }
                 j++;
-                i -= rank;
+                bitCountCutoff -= rank;
             }
 
             return (nuint)(j * SmallBlockSize + SelectOfReversed(
                 _values[j],
-                (int)i,
-                forSetBits));
+                (int)bitCountCutoff));
         }
 
+
+        public nuint SelectUnsetBits(nuint bitCountCutoff)
+        {
+            ValidateBitCountCutoff(bitCountCutoff, UnsetBitsCount);
+
+            var ranks = _ranks;
+            int left = 0;
+            int right = ranks.Length;
+            while (left < right)
+            {
+                int pivot = left + right >> 1; // / 2;
+                nuint rank = ranks[pivot];
+                rank = (nuint)(pivot * LargeBlockSize) - rank;
+                if (bitCountCutoff < rank)
+                {
+                    right = pivot;
+                }
+                else
+                {
+                    left = pivot + 1;
+                }
+            }
+            right--;
+
+            bitCountCutoff -= (nuint)(right * LargeBlockSize) - ranks[right];
+            int j = right * BlockRate;
+            while (true)
+            {
+                uint rank = unchecked((uint)RankOfReversed(
+                    ~_values[j],
+                    SmallBlockSize,
+                    SmallBlockSize));
+
+                if (bitCountCutoff < rank) { break; }
+                j++;
+                bitCountCutoff -= rank;
+            }
+
+            return (nuint)(j * SmallBlockSize + SelectOfReversed(
+                ~_values[j],
+                (int)bitCountCutoff));
+        }
 
         public static SuccinctBits Read(BinaryReader reader)
         {

@@ -39,6 +39,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 
         public nuint Size => _size;
 
+        public nuint SetBitsCount => _setBitsCount;
+
+        public nuint UnsetBitsCount => _size - _setBitsCount;
+
         public SuccinctBitsRRR(
             nuint size,
             nuint setBitsCount,
@@ -55,9 +59,9 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             _offsetValues = offsetValues;
         }
 
-        public bool GetBit(nuint bitPosition)
+        public bool GetBit(nuint position)
         {
-            nuint blockPosition = bitPosition / BlockSize;
+            nuint blockPosition = position / BlockSize;
             var @class = ClassOfBlock(blockPosition, _classValues);
             if (@class == 0)
             {
@@ -76,7 +80,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 _offsetValues,
                 _classValues);
 
-            int offsetInBlock = (int)(bitPosition % BlockSize);
+            int offsetInBlock = (int)(position % BlockSize);
             nuint mask = NUIntOne << BlockSize - 1 - offsetInBlock;
             return (block & mask) != 0;
         }
@@ -171,20 +175,12 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 bitsPerClass));
         }
 
-        public nuint GetBitsCount(bool forSetBits)
-        {
-            return forSetBits ? _setBitsCount : _size - _setBitsCount;
-        }
+        public nuint RankUnsetBits(nuint bitPositionCutoff) => bitPositionCutoff - RankSetBits(bitPositionCutoff);
 
-        public nuint Rank(nuint bitPositionCutoff, bool forSetBits)
-        {
-            return forSetBits ? RankOnes(bitPositionCutoff) : bitPositionCutoff - RankOnes(bitPositionCutoff);
-        }
-
-        private nuint RankOnes(nuint bitIndex)
+        public nuint RankSetBits(nuint bitPositionCutoff)
         {
             var blockSize = BlockSize;
-            nuint blockIndex = bitIndex / blockSize;
+            nuint blockIndex = bitPositionCutoff / blockSize;
             var superBlockFactor = SuperBlockFactor;
             var superBlockSize = SuperBlockSize;
 
@@ -204,7 +200,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 {
                     // All the bits in the super-block are 1.
                     nuint superBlockHead = superBlockIndex * superBlockSize;
-                    return rank + (bitIndex - superBlockHead);
+                    return rank + (bitPositionCutoff - superBlockHead);
                 }
             }
 
@@ -217,7 +213,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             }
 
             var block = FetchBlock(blockIndex);
-            int posInTheBlock = (int)(bitIndex % blockSize);
+            int posInTheBlock = (int)(bitPositionCutoff % blockSize);
             // Least significant bits are set.
             nuint mask = (NUIntOne << blockSize - posInTheBlock) - 1;
             // Most significant bits are set.
@@ -225,18 +221,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             return rank + PopCount(block & mask);
         }
 
-        public nuint Select(nuint bitCountCutoff, bool forSetBits)
+        public nuint SelectSetBits(nuint bitCountCutoff)
         {
-            return forSetBits ? SelectSetBits(bitCountCutoff) : SelectNotSetBits(bitCountCutoff);
-        }
-
-        private nuint SelectSetBits(nuint bitCountCutoff)
-        {
-            if (bitCountCutoff >= GetBitsCount(true))
+            if (bitCountCutoff >= SetBitsCount)
             {
                 throw new ArgumentOutOfRangeException(
                     @$"The argument '{nameof(bitCountCutoff)}' with value '{bitCountCutoff}'
- exceeds the total number of 1s = {GetBitsCount(true)}");
+ exceeds the total number of 1s = {SetBitsCount}");
             }
 
             var rankSamples = _rankSamples;
@@ -292,16 +283,16 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             nuint bitAlignedBlock = block << NativeBitCount - blockSize;
             return blockPosition * blockSize + NativeBitOps.Select(
                 bitAlignedBlock,
-                (int)bitCountCutoff, true);
+                (int)bitCountCutoff);
         }
 
-        private nuint SelectNotSetBits(nuint bitPosition)
+        public nuint SelectUnsetBits(nuint position)
         {
-            if (bitPosition >= GetBitsCount(false))
+            if (position >= UnsetBitsCount)
             {
                 throw new ArgumentOutOfRangeException(
-                    @$"The zero bit position of '{bitPosition}'
- exceeds the total count of zeros - '{GetBitsCount(false)}'.");
+                    @$"The zero bit position of '{position}'
+ exceeds the total count of zeros - '{UnsetBitsCount}'.");
             }
 
             var superBlockSize = SuperBlockSize;
@@ -315,7 +306,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 nuint rankAtThePivot =
                     pivot * superBlockSize - _rankSamples.Get(pivot);
 
-                if (bitPosition < rankAtThePivot)
+                if (position < rankAtThePivot)
                 {
                     right = pivot;
                 }
@@ -333,23 +324,23 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             if (delta == 0)
             {
                 // every bit in the left-th super-block is 0
-                return j * blockSize + (bitPosition - (rank + 1));
+                return j * blockSize + (position - (rank + 1));
             }
 
-            bitPosition -= right * superBlockSize - rank;
+            position -= right * superBlockSize - rank;
 
             while (true)
             {
                 uint c = ClassOfBlock(j, _classValues);
                 uint r = blockSize - c;
-                if (bitPosition < r) { break; }
+                if (position < r) { break; }
                 j++;
-                bitPosition -= r;
+                position -= r;
             }
 
             nuint block = FetchBlock(j);
             nuint bitAlignedBlock = block << NativeBitCount - blockSize;
-            return j * blockSize + NativeBitOps.Select(bitAlignedBlock, (int)bitPosition, false);
+            return j * blockSize + NativeBitOps.Select(~bitAlignedBlock, (int)position);
         }
 
         public static SuccinctBitsRRR Read(BinaryReader reader)

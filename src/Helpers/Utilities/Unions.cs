@@ -16,7 +16,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
     public static class Unions
     {
         [StructLayout(LayoutKind.Explicit)]
-        internal struct Int32ByteUnion
+        public struct Int32ByteUnion
         {
             [FieldOffset(0)]
             public byte Byte0;

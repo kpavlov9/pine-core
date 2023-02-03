@@ -1,8 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.BitsBuilder;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.BitsBuilder;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices
 {
@@ -67,7 +67,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             nuint low = value & _lowBitsMask;
 
             _lowBits.AddBits(low, _lowBitsCount);
-            _highBitsBuilder.Set(_position + high, true);
+            _highBitsBuilder.Set(_position + high);
 
             _lastValue = value;
             _position++;

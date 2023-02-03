@@ -5,9 +5,10 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+
+using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.IONativeBitHelper;
-using KGIntelligence.PineCore.Helpers.Utilities;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices
 {
