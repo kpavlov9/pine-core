@@ -1,14 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.Bits;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices.SuccinctBitsBuilder;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices
 {

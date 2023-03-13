@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using System.Threading.Tasks;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices
 {
