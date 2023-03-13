@@ -56,7 +56,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                         (int)((size + NativeBitCountMinusOne) / NativeBitCount)
                         ]);
             _ranks = new List<nuint>();
-            _size = 0;
+            _size = size;
             _setBitsCount = 0;
         }
 
