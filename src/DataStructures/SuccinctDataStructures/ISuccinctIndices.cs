@@ -36,5 +36,10 @@
         /// Returns the count of the unset bits.
         /// </summary>
         public nuint UnsetBitsCount { get; }
+
+        /// <summary>
+        /// Returns the count of all bits.
+        /// </summary>
+        public nuint Size { get; }
     }
 }
