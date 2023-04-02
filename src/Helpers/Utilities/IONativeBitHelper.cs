@@ -37,14 +37,14 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static nuint ReadNUInt64(
             BinaryReader reader) =>
-            (nuint)GetULong(uintLow: reader.ReadUInt32(), uintHigh: reader.ReadUInt32());
+            (nuint)GetULongLittleEndian(uintLow: reader.ReadUInt32(), uintHigh: reader.ReadUInt32());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void WriteNUInt64(
             nuint value,
             BinaryWriter writer)
         {
-            GetUInt(value, out var lo, out var hi);
+            GetUIntLittleEndian(value, out var lo, out var hi);
             writer.Write(lo);
             writer.Write(hi);
         }

@@ -15,7 +15,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
         private static void Push32(BitsBuilder builder, ulong bits, int bitsCount)
         {
-            GetUInt(bits, out var lo, out var hi);
+            GetUIntLittleEndian(bits, out var lo, out var hi);
             builder.AddBits(unchecked((nuint)lo), bitsCount);
             builder.AddBits(unchecked((nuint)hi), bitsCount);
         }

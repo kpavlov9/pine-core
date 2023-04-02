@@ -304,8 +304,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(GetUInt(_size));
-            writer.Write(GetUInt(_setBitsCount));
+            writer.Write(GetUIntLittleEndian(_size));
+            writer.Write(GetUIntLittleEndian(_setBitsCount));
 
             var vSize = _values.Length;
 
