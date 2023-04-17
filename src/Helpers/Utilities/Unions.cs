@@ -248,7 +248,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// Avoid using this union for persistance data, because is not endian agnostic.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetFloatLittleEndian(int x)
+        public static float GetFloat(int x)
         {
             IntFloat intFloat = default;
             intFloat.Int = x;

@@ -22,7 +22,8 @@ namespace PinusTests.units.PinusCore
         [InlineData(1)]
         public void float_uint(uint @uint)
         {
-            Assert.Equal(GetUInt(GetFloat(@uint)), @uint);
+            Assert.Equal(GetUIntLittleEndian(GetFloatLittleEndian(@uint)), @uint);
+            Assert.Equal(GetUIntBigEndian(GetFloatBigEndian(@uint)), @uint);
         }
 
         [Theory]
@@ -32,7 +33,8 @@ namespace PinusTests.units.PinusCore
         [InlineData(1)]
         public void double_ulong(ulong @ulong)
         {
-            Assert.Equal(GetULong(GetDouble(@ulong)), @ulong);
+            Assert.Equal(GetULongLittleEndian(GetDoubleLittleEndian(@ulong)), @ulong);
+            Assert.Equal(GetULongBigEndian(GetDoubleBigEndian(@ulong)), @ulong);
         }
     }
 }
