@@ -7,7 +7,6 @@ namespace PinusTests.units.PinusCore
         [Theory]
         [InlineData(int.MinValue)]
         [InlineData(int.MaxValue)]
-        [InlineData(0)]
         [InlineData(1)]
         [InlineData(-1)]
         public void float_int(int @int)
@@ -29,7 +28,6 @@ namespace PinusTests.units.PinusCore
         [Theory]
         [InlineData(ulong.MinValue)]
         [InlineData(ulong.MaxValue)]
-        [InlineData(0)]
         [InlineData(1)]
         public void double_ulong(ulong @ulong)
         {
@@ -40,7 +38,6 @@ namespace PinusTests.units.PinusCore
         [Theory]
         [InlineData(ushort.MinValue)]
         [InlineData(ushort.MaxValue)]
-        [InlineData(0)]
         [InlineData(1)]
         public void half_ushort(ushort @ushort)
         {
@@ -50,7 +47,6 @@ namespace PinusTests.units.PinusCore
         [Theory]
         [InlineData(ulong.MinValue)]
         [InlineData(ulong.MaxValue)]
-        [InlineData(0)]
         [InlineData(1)]
         public void ulong_uint(ulong @ulong)
         {
@@ -64,7 +60,6 @@ namespace PinusTests.units.PinusCore
         [Theory]
         [InlineData(uint.MinValue)]
         [InlineData(uint.MaxValue)]
-        [InlineData(0)]
         [InlineData(1)]
         public void uint_ushort(uint @uint)
         {
