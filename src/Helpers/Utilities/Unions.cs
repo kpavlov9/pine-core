@@ -59,7 +59,20 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        private ref struct UIntUlong
+        private ref struct UShortUInt
+        {
+            [FieldOffset(0)]
+            public uint UInt;
+
+            [FieldOffset(0)]
+            public ushort UShortLow;
+
+            [FieldOffset(2)]
+            public ushort UShortHigh;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private ref struct UIntULong
         {
             [FieldOffset(0)]
             public ulong ULong;
@@ -140,6 +153,54 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             uIntUlong.ULong = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
             low = uIntUlong.UIntLow;
             high = uIntUlong.UIntHigh;
+        }
+        #endregion
+
+        #region UShort-UInt Union
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetUIntLittleEndian(ushort low, ushort high)
+        {
+            UShortUInt union = default;
+            union.UShortLow = low;
+            union.UShortHigh = high;
+            return BitConverter.IsLittleEndian ? union.UInt : ReverseBits(union.UInt);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetUIntBigEndian(ushort low, ushort high)
+        {
+            UShortUInt union = default;
+            union.UShortLow = low;
+            union.UShortHigh = high;
+            return BitConverter.IsLittleEndian ? ReverseBits(union.UInt) : union.UInt;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void GetUShortLittleEndian(
+            uint x,
+            out ushort low,
+            out ushort high)
+        {
+            UShortUInt union = default;
+
+            // Respect the endianness of the machine.
+            union.UInt = BitConverter.IsLittleEndian ? x : ReverseBits(x);
+            low = union.UShortLow;
+            high = union.UShortHigh;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void GetUShortBigEndian(
+            uint x,
+            out ushort low,
+            out ushort high)
+        {
+            UShortUInt union = default;
+
+            // Respect the endianness of the machine.
+            union.UInt = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
+            low = union.UShortLow;
+            high = union.UShortHigh;
         }
         #endregion
 
