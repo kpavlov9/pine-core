@@ -286,11 +286,8 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         public static int Rank(
             ulong value,
             int bitPositionCutoff,
-            int blockSize = LongBitSize)
-        {
-            value >>= blockSize - bitPositionCutoff;
-            return BitOperations.PopCount(value);
-        }
+            int blockSize = LongBitSize) =>
+            BitOperations.PopCount(value >>= blockSize - bitPositionCutoff);
 
         /// <summary>
         /// Returns the count of set bits up to the given position
@@ -300,10 +297,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         public static int Rank(
             uint value,
             int bitPositionCutoff,
-            int blockSize = IntBitSize)
-        {
-            value >>= blockSize - bitPositionCutoff;
-            return BitOperations.PopCount(value);
-        }
+            int blockSize = IntBitSize) =>
+            BitOperations.PopCount(value >> blockSize - bitPositionCutoff);
     }
 }
