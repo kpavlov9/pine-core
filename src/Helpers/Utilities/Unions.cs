@@ -257,7 +257,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
         #region ULong-Double Union
         /// <summary>
-        /// Returns double corresponding to the bit ordering of ulong.
+        /// Returns double corresponding to bit ordering of ulong.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetDouble(ulong x)
@@ -268,7 +268,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns double corresponding to the bit ordering of ulong.
+        /// Returns double corresponding to bit ordering of ulong.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetDoubleLittleEndian(ulong x)
@@ -277,7 +277,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
                 : ReverseBits(x));
 
         /// <summary>
-        /// Returns double corresponding to the the bit ordering of ulong.
+        /// Returns double corresponding to the bit ordering of ulong.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetDoubleBigEndian(ulong x)
@@ -286,7 +286,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
                 : x);
 
         /// <summary>
-        /// Returns ulong corresponding to the the bit ordering double.
+        /// Returns ulong corresponding to the bit ordering of double.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULong(double x)
@@ -297,7 +297,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns ulong corresponding to the the bit ordering double.
+        /// Returns ulong corresponding to the bit ordering of double.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULongLittleEndian(double x)
@@ -306,7 +306,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : ReverseBits(GetULong(x));
 
         /// <summary>
-        /// Returns ulong corresponding to the the bit ordering double.
+        /// Returns ulong corresponding to the bit ordering of double.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULongBigEndian(double x)
@@ -322,7 +322,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
         #region UInt-Float Union
         /// <summary>
-        /// Returns float corresponding to the the bit ordering of uint.
+        /// Returns float corresponding to the bit ordering of uint.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetFloat(uint x)
@@ -333,7 +333,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns float corresponding to the the bit ordering of uint.
+        /// Returns float corresponding to the bit ordering of uint.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetFloatLittleEndian(uint x)
@@ -342,7 +342,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
                 : ReverseBits(x));
 
         /// <summary>
-        /// Returns float corresponding to the the bit ordering of uint.
+        /// Returns float corresponding to the bit ordering of uint.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetFloatBigEndian(uint x)
@@ -351,7 +351,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
                 : x);
 
         /// <summary>
-        /// Returns uint corresponding to the the bit ordering float.
+        /// Returns uint corresponding to the bit ordering of float.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUInt(float x)
@@ -362,7 +362,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns uint corresponding to the the bit ordering float.
+        /// Returns uint corresponding to the bit ordering of float.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntLittleEndian(float x)
@@ -371,7 +371,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : ReverseBits(GetUInt(x));
 
         /// <summary>
-        /// Returns uint corresponding to the the bit ordering float.
+        /// Returns uint corresponding to the bit ordering of float.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntBigEndian(float x)
@@ -382,7 +382,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
         #region
         /// <summary>
-        /// Returns half corresponding to the the bit ordering of ushort.
+        /// Returns half corresponding to the bit ordering of ushort.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Half GetHalf(ushort x)
@@ -393,7 +393,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns half corresponding to the the bit ordering of ushort.
+        /// Returns half corresponding to the bit ordering of ushort.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Half GetHalfLittleEndian(ushort x)
@@ -402,7 +402,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : GetHalf(ReverseBits(x));
 
         /// <summary>
-        /// Returns half corresponding to the the bit ordering of ushort.
+        /// Returns half corresponding to the bit ordering of ushort.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Half GetHalfBigEndian(ushort x)
@@ -411,7 +411,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : GetHalf(x);
 
         /// <summary>
-        /// Returns ushort corresponding to the the bit ordering float.
+        /// Returns ushort corresponding to the bit ordering of half.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShort(Half x)
@@ -422,7 +422,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns ushort corresponding to the the bit ordering float.
+        /// Returns ushort corresponding to bit ordering of half.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShortLittleEndian(Half x)
@@ -431,7 +431,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : ReverseBits(GetUShort(x));
 
         /// <summary>
-        /// Returns ushort corresponding to the the bit ordering float.
+        /// Returns ushort corresponding to bit ordering of half.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShortBigEndian(Half x)
