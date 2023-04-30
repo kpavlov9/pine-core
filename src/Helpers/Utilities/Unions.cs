@@ -399,7 +399,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         public static Half GetHalfLittleEndian(ushort x)
             => BitConverter.IsLittleEndian
             ? GetHalf(x)
-            : GetHalf((ushort)ReverseBits(x));
+            : GetHalf(ReverseBits(x));
 
         /// <summary>
         /// Returns half corresponding to the the bit ordering of ushort.
@@ -407,7 +407,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Half GetHalfBigEndian(ushort x)
             => BitConverter.IsLittleEndian
-            ? GetHalf((ushort)ReverseBits(x))
+            ? GetHalf(ReverseBits(x))
             : GetHalf(x);
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         public static ushort GetUShortLittleEndian(Half x)
             => BitConverter.IsLittleEndian
             ? GetUShort(x)
-            : (ushort)ReverseBits(GetUShort(x));
+            : ReverseBits(GetUShort(x));
 
         /// <summary>
         /// Returns ushort corresponding to the the bit ordering float.
@@ -436,7 +436,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShortBigEndian(Half x)
             => BitConverter.IsLittleEndian
-            ? (ushort)ReverseBits(GetUShort(x))
+            ? ReverseBits(GetUShort(x))
             : GetUShort(x);
         #endregion
 
