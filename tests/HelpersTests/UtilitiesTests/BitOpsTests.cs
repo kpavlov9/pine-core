@@ -23,24 +23,39 @@ namespace PinusTests.units.PinusCore
 
         [Theory]
         [InlineData(
+            (byte)0xf0,
+            (byte)0x0f,
+            (ushort)0xff00,
+            (ushort)0x00ff,
             0xffff0000,
             0x0000ffff,
             0xffffffff00000000UL,
             0x00000000ffffffffUL)]
         [InlineData(
+            (byte)0x0f,
+            (byte)0xf0,
+            (ushort)0x00ff,
+            (ushort)0xff00,
             0x0000ffff,
             0xffff0000,
             0x00000000ffffffffUL,
             0xffffffff00000000UL)]
         public void reverse_bits(
+            byte byteValue,
+            byte reversedByteBits,
+            ushort ushortValue,
+            ushort reversedUShortBits,
             uint uintValue,
             uint reversedUIntBits,
             ulong ulongValue,
             ulong reversedULongBits)
         {
-
+            var resultedByteReversedBits = ReverseBits(byteValue);
+            var resultedUShortReversedBits = ReverseBits(ushortValue);
             var resultedUIntReversedBits = ReverseBits(uintValue);
             var resultedULongReversedBits = ReverseBits(ulongValue);
+            Assert.True(reversedByteBits == resultedByteReversedBits);
+            Assert.True(reversedUShortBits == resultedUShortReversedBits);
             Assert.True(reversedUIntBits == resultedUIntReversedBits);
             Assert.True(reversedULongBits == resultedULongReversedBits);
         }
@@ -61,7 +76,6 @@ namespace PinusTests.units.PinusCore
             int uLongPosition,
             int expectedULongRank)
         {
-
             var resultedUIntReversedBits = RankOfReversed(
                 value: uintValue,
                 bitPositionCutoff: uIntPosition,

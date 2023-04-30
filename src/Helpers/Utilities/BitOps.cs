@@ -39,6 +39,26 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// <summary>
         /// Returns a value with the reversed bit representation of the input value.
         /// </summary>
+        public static byte ReverseBits(byte value)
+            => (byte)(((value * 0x80200802ul) & 0x0884422110ul) * 0x0101010101ul >> 32);
+
+        /// <summary>
+        /// Returns a value with the reversed bit representation of the input value.
+        /// </summary>
+        public static ushort ReverseBits(ushort value)
+        {
+            uint valueUI = value;
+            valueUI = ((valueUI >> 1) & 0x5555) | ((valueUI & 0x5555) << 1);
+            valueUI = ((valueUI >> 2) & 0x3333) | ((valueUI & 0x3333) << 2);
+            valueUI = ((valueUI >> 4) & 0x0F0F) | ((valueUI & 0x0F0F) << 4);
+            valueUI = ((valueUI >> 8) & 0x00FF) | ((valueUI & 0x00FF) << 8);
+
+            return (ushort)valueUI;
+        }
+
+        /// <summary>
+        /// Returns a value with the reversed bit representation of the input value.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReverseBits(uint value)
         {
