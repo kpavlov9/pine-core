@@ -38,6 +38,16 @@ namespace PinusTests.units.PinusCore
         }
 
         [Theory]
+        [InlineData(ushort.MinValue)]
+        [InlineData(ushort.MaxValue)]
+        [InlineData(0)]
+        [InlineData(1)]
+        public void half_ushort(ushort @ushort)
+        {
+            Assert.Equal(GetUShort(GetHalf(@ushort)), @ushort);
+        }
+
+        [Theory]
         [InlineData(ulong.MinValue)]
         [InlineData(ulong.MaxValue)]
         [InlineData(0)]

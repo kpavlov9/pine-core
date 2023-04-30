@@ -32,6 +32,15 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         [StructLayout(LayoutKind.Explicit)]
+        private ref struct UShortHalf
+        {
+            [FieldOffset(0)]
+            public ushort UShort;
+            [FieldOffset(0)]
+            public Half Half;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
         private ref struct UIntFloat
         {
             [FieldOffset(0)]
@@ -301,6 +310,31 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             union.Float = x;
             // Respect the endianness of the machine.
             return BitConverter.IsLittleEndian ? ReverseBits(union.UInt) : union.UInt;
+        }
+        #endregion
+
+        #region
+
+        /// <summary>
+        /// Returns half corresponding to the the bit ordering of uint.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Half GetHalf(ushort x)
+        {
+            UShortHalf union = default;
+            union.UShort = x;
+            return union.Half;
+        }
+
+        /// <summary>
+        /// Returns uint corresponding to the the bit ordering float.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort GetUShort(Half x)
+        {
+            UShortHalf union = default;
+            union.Half = x;
+            return union.UShort;
         }
         #endregion
 
