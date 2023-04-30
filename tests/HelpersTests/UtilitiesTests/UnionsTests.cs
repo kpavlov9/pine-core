@@ -21,6 +21,7 @@ namespace PinusTests.units.PinusCore
         [InlineData(1)]
         public void float_uint(uint @uint)
         {
+            Assert.Equal(GetUInt(GetFloat(@uint)), @uint);
             Assert.Equal(GetUIntLittleEndian(GetFloatLittleEndian(@uint)), @uint);
             Assert.Equal(GetUIntBigEndian(GetFloatBigEndian(@uint)), @uint);
         }
@@ -31,6 +32,7 @@ namespace PinusTests.units.PinusCore
         [InlineData(1)]
         public void double_ulong(ulong @ulong)
         {
+            Assert.Equal(GetULong(GetDouble(@ulong)), @ulong);
             Assert.Equal(GetULongLittleEndian(GetDoubleLittleEndian(@ulong)), @ulong);
             Assert.Equal(GetULongBigEndian(GetDoubleBigEndian(@ulong)), @ulong);
         }
@@ -42,6 +44,8 @@ namespace PinusTests.units.PinusCore
         public void half_ushort(ushort @ushort)
         {
             Assert.Equal(GetUShort(GetHalf(@ushort)), @ushort);
+            Assert.Equal(GetUShortBigEndian(GetHalfBigEndian(@ushort)), @ushort);
+            Assert.Equal(GetUShortLittleEndian(GetHalfLittleEndian(@ushort)), @ushort);
         }
 
         [Theory]
@@ -50,7 +54,10 @@ namespace PinusTests.units.PinusCore
         [InlineData(1)]
         public void ulong_uint(ulong @ulong)
         {
-            GetUIntLittleEndian(@ulong, out var low, out var high);
+            GetUInt(@ulong, out var low, out var high);
+            Assert.Equal(GetULong(low: low, high: high), @ulong);
+
+            GetUIntLittleEndian(@ulong, out low, out high);
             Assert.Equal(GetULongLittleEndian(low: low, high: high), @ulong);
 
             GetUIntBigEndian(@ulong, out low, out high);
@@ -64,6 +71,9 @@ namespace PinusTests.units.PinusCore
         public void uint_ushort(uint @uint)
         {
             GetUShortLittleEndian(@uint, out var low, out var high);
+            Assert.Equal(GetUIntLittleEndian(low: low, high: high), @uint);
+
+            GetUShortLittleEndian(@uint, out low, out high);
             Assert.Equal(GetUIntLittleEndian(low: low, high: high), @uint);
 
             GetUShortBigEndian(@uint, out low, out high);

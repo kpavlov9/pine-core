@@ -103,85 +103,123 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         #region UInt-NUInt Union
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetUInt(nuint x)
+        {
+            UIntNUInt union = default;
+            union.NUInt = x;
+            return union.UInt;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntLittleEndian(nuint x)
-        {
-            UIntNUInt union = default;
-            // Respect the endianness of the machine.
-            union.NUInt = BitConverter.IsLittleEndian ? x : ReverseBits(x);
-            return union.UInt;
-        }
+            => BitConverter.IsLittleEndian
+            ? GetUInt(x)
+            : ReverseBits(GetUInt(x));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntBigEndian(nuint x)
-        {
-            UIntNUInt union = default;
-            // Respect the endianness of the machine.
-            union.NUInt = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
-            return union.UInt;
-        }
+            => BitConverter.IsLittleEndian
+            ? ReverseBits(GetUInt(x))
+            : GetUInt(x);
         #endregion
 
         #region UInt-ULong Union
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong GetULongLittleEndian(uint low, uint high)
+        public static ulong GetULong(uint low, uint high)
         {
             UIntULong union = default;
             union.UIntLow = low;
             union.UIntHigh = high;
-            return BitConverter.IsLittleEndian ? union.ULong : ReverseBits(union.ULong);
+            return union.ULong;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong GetULongLittleEndian(uint low, uint high)
+            => BitConverter.IsLittleEndian
+            ? GetULong(low, high)
+            : ReverseBits(GetULong(low, high));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULongBigEndian(uint low, uint high)
-        {
-            UIntULong union = default;
-            union.UIntLow = low;
-            union.UIntHigh = high;
-            return BitConverter.IsLittleEndian ? ReverseBits(union.ULong) : union.ULong;
-        }
+            => BitConverter.IsLittleEndian
+            ? ReverseBits(GetULong(low, high))
+            : GetULong(low, high);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void GetUIntLittleEndian(ulong x, out uint low, out uint high)
+        public static void GetUInt(
+            ulong x,
+            out uint low,
+            out uint high)
         {
             UIntULong union = default;
-
-            // Respect the endianness of the machine.
-            union.ULong = BitConverter.IsLittleEndian ? x : ReverseBits(x);
+            union.ULong = x;
             low = union.UIntLow;
             high = union.UIntHigh;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void GetUIntLittleEndian(
+            ulong x,
+            out uint low,
+            out uint high)
+        {
+            if (BitConverter.IsLittleEndian)
+            {
+                GetUInt(x, out low, out high);
+            }
+            else
+            {
+                GetUInt(ReverseBits(x), out low, out high);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetUIntBigEndian(ulong x, out uint low, out uint high)
         {
-            UIntULong uIntUlong = default;
-
-            // Respect the endianness of the machine.
-            uIntUlong.ULong = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
-            low = uIntUlong.UIntLow;
-            high = uIntUlong.UIntHigh;
+            if (BitConverter.IsLittleEndian)
+            {
+                GetUInt(ReverseBits(x), out low, out high);
+            }
+            else
+            {
+                GetUInt(x, out low, out high);
+            }
         }
         #endregion
 
         #region UShort-UInt Union
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint GetUIntLittleEndian(ushort low, ushort high)
+        public static uint GetUInt(ushort low, ushort high)
         {
             UShortUInt union = default;
             union.UShortLow = low;
             union.UShortHigh = high;
-            return BitConverter.IsLittleEndian ? union.UInt : ReverseBits(union.UInt);
+            return union.UInt;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetUIntLittleEndian(ushort low, ushort high)
+            => BitConverter.IsLittleEndian
+            ? GetUInt(low, high)
+            : ReverseBits(GetUInt(low, high));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntBigEndian(ushort low, ushort high)
+            => BitConverter.IsLittleEndian
+            ? ReverseBits(GetUInt(low, high))
+            : GetUInt(low, high);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void GetUShort(
+            uint x,
+            out ushort low,
+            out ushort high)
         {
             UShortUInt union = default;
-            union.UShortLow = low;
-            union.UShortHigh = high;
-            return BitConverter.IsLittleEndian ? ReverseBits(union.UInt) : union.UInt;
+            union.UInt = x;
+            low = union.UShortLow;
+            high = union.UShortHigh;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -190,12 +228,14 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             out ushort low,
             out ushort high)
         {
-            UShortUInt union = default;
-
-            // Respect the endianness of the machine.
-            union.UInt = BitConverter.IsLittleEndian ? x : ReverseBits(x);
-            low = union.UShortLow;
-            high = union.UShortHigh;
+            if (BitConverter.IsLittleEndian)
+            {
+                GetUShort(x, out low, out high);
+            }
+            else
+            {
+                GetUShort(ReverseBits(x), out low, out high);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -204,12 +244,14 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             out ushort low,
             out ushort high)
         {
-            UShortUInt union = default;
-
-            // Respect the endianness of the machine.
-            union.UInt = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
-            low = union.UShortLow;
-            high = union.UShortHigh;
+            if (BitConverter.IsLittleEndian)
+            {
+                GetUShort(ReverseBits(x), out low, out high);
+            }
+            else
+            {
+                GetUShort(x, out low, out high);
+            }
         }
         #endregion
 
@@ -218,24 +260,40 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// Returns double corresponding to the bit ordering of ulong.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double GetDoubleLittleEndian(ulong x)
+        public static double GetDouble(ulong x)
         {
             ULongDouble union = default;
-            // Respect the endianness of the machine.
-            union.ULong = BitConverter.IsLittleEndian ? x : ReverseBits(x);
+            union.ULong = x;
             return union.Double;
         }
+
+        /// <summary>
+        /// Returns double corresponding to the bit ordering of ulong.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double GetDoubleLittleEndian(ulong x)
+            => GetDouble(BitConverter.IsLittleEndian
+                ? x
+                : ReverseBits(x));
 
         /// <summary>
         /// Returns double corresponding to the the bit ordering of ulong.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetDoubleBigEndian(ulong x)
+            => GetDouble(BitConverter.IsLittleEndian
+                ? ReverseBits(x)
+                : x);
+
+        /// <summary>
+        /// Returns ulong corresponding to the the bit ordering double.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong GetULong(double x)
         {
             ULongDouble union = default;
-            // Respect the endianness of the machine.
-            union.ULong = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
-            return union.Double;
+            union.Double = x;
+            return union.ULong;
         }
 
         /// <summary>
@@ -243,12 +301,9 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULongLittleEndian(double x)
-        {
-            ULongDouble union = default;
-            union.Double = x;
-            // Respect the endianness of the machine.
-            return BitConverter.IsLittleEndian ? union.ULong : ReverseBits(union.ULong);
-        }
+            => BitConverter.IsLittleEndian
+            ? GetULong(x)
+            : ReverseBits(GetULong(x));
 
         /// <summary>
         /// Returns ulong corresponding to the the bit ordering double.
@@ -259,7 +314,9 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             ULongDouble union = default;
             union.Double = x;
             // Respect the endianness of the machine.
-            return BitConverter.IsLittleEndian ? ReverseBits(union.ULong) : union.ULong;
+            return BitConverter.IsLittleEndian
+                ? ReverseBits(union.ULong)
+                : union.ULong;
         }
         #endregion
 
@@ -268,11 +325,10 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// Returns float corresponding to the the bit ordering of uint.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float GetFloatLittleEndian(uint x)
+        public static float GetFloat(uint x)
         {
             UIntFloat union = default;
-            // Respect the endianness of the machine.
-            union.UInt = BitConverter.IsLittleEndian ? x : ReverseBits(x);
+            union.UInt = x;
             return union.Float;
         }
 
@@ -280,12 +336,29 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// Returns float corresponding to the the bit ordering of uint.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetFloatLittleEndian(uint x)
+            => GetFloat(BitConverter.IsLittleEndian
+                ? x
+                : ReverseBits(x));
+
+        /// <summary>
+        /// Returns float corresponding to the the bit ordering of uint.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetFloatBigEndian(uint x)
+            => GetFloat(BitConverter.IsLittleEndian
+                ? ReverseBits(x)
+                : x);
+
+        /// <summary>
+        /// Returns uint corresponding to the the bit ordering float.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetUInt(float x)
         {
             UIntFloat union = default;
-            // Respect the endianness of the machine.
-            union.UInt = BitConverter.IsLittleEndian ? ReverseBits(x) : x;
-            return union.Float;
+            union.Float = x;
+            return union.UInt;
         }
 
         /// <summary>
@@ -293,30 +366,23 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntLittleEndian(float x)
-        {
-            UIntFloat union = default;
-            union.Float = x;
-            // Respect the endianness of the machine.
-            return BitConverter.IsLittleEndian ? union.UInt : ReverseBits(union.UInt);
-        }
+            => BitConverter.IsLittleEndian
+            ? GetUInt(x)
+            : ReverseBits(GetUInt(x));
 
         /// <summary>
         /// Returns uint corresponding to the the bit ordering float.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint GetUIntBigEndian(float x)
-        {
-            UIntFloat union = default;
-            union.Float = x;
-            // Respect the endianness of the machine.
-            return BitConverter.IsLittleEndian ? ReverseBits(union.UInt) : union.UInt;
-        }
+            => BitConverter.IsLittleEndian
+            ? ReverseBits(GetUInt(x))
+            : GetUInt(x);
         #endregion
 
         #region
-
         /// <summary>
-        /// Returns half corresponding to the the bit ordering of uint.
+        /// Returns half corresponding to the the bit ordering of ushort.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Half GetHalf(ushort x)
@@ -327,7 +393,25 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         }
 
         /// <summary>
-        /// Returns uint corresponding to the the bit ordering float.
+        /// Returns half corresponding to the the bit ordering of ushort.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Half GetHalfLittleEndian(ushort x)
+            => BitConverter.IsLittleEndian
+            ? GetHalf(x)
+            : GetHalf((ushort)ReverseBits(x));
+
+        /// <summary>
+        /// Returns half corresponding to the the bit ordering of ushort.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Half GetHalfBigEndian(ushort x)
+            => BitConverter.IsLittleEndian
+            ? GetHalf((ushort)ReverseBits(x))
+            : GetHalf(x);
+
+        /// <summary>
+        /// Returns ushort corresponding to the the bit ordering float.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShort(Half x)
@@ -336,6 +420,24 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             union.Half = x;
             return union.UShort;
         }
+
+        /// <summary>
+        /// Returns ushort corresponding to the the bit ordering float.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort GetUShortLittleEndian(Half x)
+            => BitConverter.IsLittleEndian
+            ? GetUShort(x)
+            : (ushort)ReverseBits(GetUShort(x));
+
+        /// <summary>
+        /// Returns ushort corresponding to the the bit ordering float.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort GetUShortBigEndian(Half x)
+            => BitConverter.IsLittleEndian
+            ? (ushort)ReverseBits(GetUShort(x))
+            : GetUShort(x);
         #endregion
 
         #region Int-Float Union
