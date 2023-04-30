@@ -36,5 +36,19 @@ namespace PinusTests.units.PinusCore
             Assert.Equal(GetULongLittleEndian(GetDoubleLittleEndian(@ulong)), @ulong);
             Assert.Equal(GetULongBigEndian(GetDoubleBigEndian(@ulong)), @ulong);
         }
+
+        [Theory]
+        [InlineData(ulong.MinValue)]
+        [InlineData(ulong.MaxValue)]
+        [InlineData(0)]
+        [InlineData(1)]
+        public void ulong_uint(ulong @ulong)
+        {
+            GetUIntLittleEndian(@ulong, out var low, out var high);
+            Assert.Equal(GetULongLittleEndian(low: low, high: high), @ulong);
+
+            GetUIntBigEndian(@ulong, out low, out high);
+            Assert.Equal(GetULongBigEndian(low: low, high: high), @ulong);
+        }
     }
 }
