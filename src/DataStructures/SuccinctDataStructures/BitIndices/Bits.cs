@@ -26,11 +26,19 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool GetBit(nuint position)
+            => GetBit(
+                position: position,
+                data: _data);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool GetBit(
+            nuint position,
+            IReadOnlyList<nuint> data)
         {
             var nUIntSize = NativeBitCount;
             int indexInList = (int)(position / nUIntSize);
             int offset = (int)(position % nUIntSize);
-            nuint block = _data[indexInList];
+            nuint block = data[indexInList];
 
             return (block & NUIntOne << NativeBitCountMinusOne - offset) != 0;
         }

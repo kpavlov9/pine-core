@@ -92,6 +92,9 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             _position = 0;
         }
 
+        public bool GetBit(nuint position) =>
+            Bits.GetBit(position: position, data: _data);
+
         public Bits Build()
         {
             return new Bits(_position, _data.ToImmutableArray());

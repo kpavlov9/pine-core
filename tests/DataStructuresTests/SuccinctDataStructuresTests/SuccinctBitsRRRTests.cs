@@ -82,14 +82,18 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             bitsBuilder.AddUnsetBits(63);
             bitsBuilder.AddSetBits(1);
 
-            var rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
+            var rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            var rrrBits = rrrBitsBuilder.Build();
 
             var bits = bitsBuilder.Build();
 
             Assert.Equal(bits.Size, rrrBits.Size);
             for (nuint i = 0; i < 65; i++)
             {
-                Assert.True(bits.GetBit(i) == rrrBits.GetBit(i), $"Failed at {i}.");
+                Assert.True(
+                    bits.GetBit(i) == rrrBits.GetBit(i) &&
+                    bits.GetBit(i) == rrrBitsBuilder.GetBit(i)
+                    , $"Failed at {i}.");
             }
 
             const nuint bitsLength = 10000;
@@ -107,13 +111,17 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
             }
 
-            rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
+            rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            rrrBits = rrrBitsBuilder.Build();
             bits = bitsBuilder.Build();
 
             Assert.Equal(bits.Size, rrrBits.Size);
             for (nuint i = 0; i < bitsLength; i++)
             {
-                Assert.True(bits.GetBit(i) == rrrBits.GetBit(i), $"Failed at {i}.");
+                Assert.True(
+                    bits.GetBit(i) == rrrBits.GetBit(i) &&
+                    bits.GetBit(i) == rrrBitsBuilder.GetBit(i)
+                    , $"Failed at {i}.");
             }
         }
 
@@ -131,11 +139,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 {
                     bitsBuilder.Set(i);
                     rrrBitsBuilder.Set(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == true);
                 }
                 else
                 {
                     bitsBuilder.Unset(i);
                     rrrBitsBuilder.Unset(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == false);
                 }
             }
 
@@ -220,11 +230,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                     values.Add(i);
                     bitsBuilder2.Set(i);
                     rrrBitsBuilder2.Set(i);
+                    Assert.True(rrrBitsBuilder2.GetBit(i) == true);
                 }
                 else
                 {
                     bitsBuilder2.Unset(i);
                     rrrBitsBuilder2.Unset(i);
+                    Assert.True(rrrBitsBuilder2.GetBit(i) == false);
                 }
                 
             }
@@ -248,11 +260,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 {
                     bitsBuilder.Set(i);
                     rrrBitsBuilder.Set(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == true);
                 }
                 else
                 {
                     bitsBuilder.Unset(i);
                     rrrBitsBuilder.Unset(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == false);
                 }
             }
 
@@ -311,15 +325,18 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 {
                     bitsBuilder.Set(i);
                     rrrBitsBuilder.Set(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == true);
                 }
                 else
                 {
                     bitsBuilder.Unset(i);
                     rrrBitsBuilder.Unset(i);
+                    Assert.True(rrrBitsBuilder.GetBit(i) == false);
                 }
             }
 
-            var rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
+            rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            var rrrBits = rrrBitsBuilder.Build();
             var rrrBitsFromSize = rrrBitsBuilder.Build();
 
             rrrBits.Write(writer1);
@@ -333,6 +350,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             Assert.Equal(rrrBits.Size, rrrBits2.Size);
             for (nuint i = 0; i < rrrBits.Size; i++)
             {
+                Assert.Equal(rrrBitsBuilder.GetBit(i), bitsBuilder.GetBit(i));
                 Assert.Equal(rrrBits.GetBit(i), bits.GetBit(i));
                 Assert.Equal(rrrBits.GetBit(i), rrrBits2.GetBit(i));
                 Assert.Equal(rrrBitsFromSize.GetBit(i), bits.GetBit(i));

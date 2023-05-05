@@ -62,6 +62,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (uint i = 0; i < 128; i++)
             {
                 bitsBuilder.Set(i);
+                Assert.True(bitsBuilder.GetBit(i) == true);
             }
 
             Assert.Throws<ArgumentOutOfRangeException>(() => bitsBuilder.Set(128));
@@ -71,6 +72,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (nuint i = 0; i < 128; i++)
             {
                 Assert.True(bits.GetBit(i));
+                Assert.True(bitsBuilder.GetBit(i));
             }
 
             Assert.Throws<IndexOutOfRangeException>(() => bits.GetBit(128));
@@ -169,6 +171,11 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.True(bits.GetBit(31));
                 Assert.True(bits.GetBit(63));
                 Assert.True(bits.GetBit(95));
+
+                Assert.True(bitsBuilder.GetBit(31));
+                Assert.True(bitsBuilder.GetBit(63));
+                Assert.True(bitsBuilder.GetBit(95));
+
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(32));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
@@ -178,6 +185,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.True(bits.GetBit(63));
                 Assert.True(bits.GetBit(127));
                 Assert.True(bits.GetBit(191));
+
+                Assert.True(bitsBuilder.GetBit(63));
+                Assert.True(bitsBuilder.GetBit(127));
+                Assert.True(bitsBuilder.GetBit(191));
 
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
@@ -197,6 +208,11 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.True(bits.GetBit(31));
                 Assert.True(bits.GetBit(63));
                 Assert.True(bits.GetBit(95));
+
+                Assert.True(bitsBuilder.GetBit(31));
+                Assert.True(bitsBuilder.GetBit(63));
+                Assert.True(bitsBuilder.GetBit(95));
+
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(32));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
@@ -206,6 +222,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.True(bits.GetBit(63));
                 Assert.True(bits.GetBit(127));
                 Assert.True(bits.GetBit(191));
+
+                Assert.True(bitsBuilder.GetBit(63));
+                Assert.True(bitsBuilder.GetBit(127));
+                Assert.True(bitsBuilder.GetBit(191));
 
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
@@ -218,6 +238,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         {
             var values = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
             var bitsBuilder = new BitsBuilder(values);
+
+
+            Assert.True(bitsBuilder.GetBit(7));
+            Assert.True(bitsBuilder.GetBit(15));
+            Assert.True(bitsBuilder.GetBit(23));
+            Assert.True(bitsBuilder.GetBit(71));
+
             var bits = bitsBuilder.Build();
 
             Assert.True(bits.GetBit(7));
@@ -241,6 +268,11 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var values = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1 };
             IEnumerable<byte> e = values;
             var bitsBuilder = new BitsBuilder(e);
+
+            Assert.True(bitsBuilder.GetBit(7));
+            Assert.True(bitsBuilder.GetBit(15));
+            Assert.True(bitsBuilder.GetBit(23));
+
             var bits = bitsBuilder.Build();
 
             Assert.True(bits.GetBit(7));

@@ -14,6 +14,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
     /// </summary>
     public sealed class SuccinctBitsRRRBuilder
     {
+        public uint Size => _bits.Size;
 
         /// <summary>
         /// It is fixed to be
@@ -149,6 +150,9 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         {
             _bits.Unset(position);
         }
+
+        public bool GetBit(nuint position)
+            => _bits.GetBit(position);
 
         public static nuint OffsetOf(nuint block, uint @class)
         {
