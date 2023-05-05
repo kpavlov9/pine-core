@@ -400,18 +400,12 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         }
 
         public override int GetHashCode()
-        {
-            return _classValues.GetHashCode() * _offsetValues.GetHashCode();
-        }
+            => _classValues.GetHashCode()* _offsetValues.GetHashCode();
 
         public static bool operator ==(SuccinctBitsRRR left, SuccinctBitsRRR right)
-        {
-            return left.Equals(right);
-        }
+            => left.Equals(right);
 
         public static bool operator !=(SuccinctBitsRRR left, SuccinctBitsRRR right)
-        {
-            return !(left == right);
-        }
+            => !(left == right);
     }
 }

@@ -137,19 +137,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         }
 
         public void Add(bool forSetBits)
-        {
-            _bits.Add(forSetBits);
-        }
+            => _bits.Add(forSetBits);
 
         public void Set(uint position)
-        {
-            _bits.Set(position);
-        }
+            => _bits.Set(position);
 
         public void Unset(uint position)
-        {
-            _bits.Unset(position);
-        }
+            => _bits.Unset(position);
 
         public bool GetBit(nuint position)
             => _bits.GetBit(position);

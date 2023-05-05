@@ -97,18 +97,12 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public override int GetHashCode()
-        {
-            return _lowBits.GetHashCode() * _highBits.GetHashCode();
-        }
+            => _lowBits.GetHashCode() * _highBits.GetHashCode();
 
         public static bool operator ==(QuasiSuccinctBits left, QuasiSuccinctBits right)
-        {
-            return left.Equals(right);
-        }
+            => left.Equals(right);
 
         public static bool operator !=(QuasiSuccinctBits left, QuasiSuccinctBits right)
-        {
-            return !(left == right);
-        }
+            => !(left == right);
     }
 }

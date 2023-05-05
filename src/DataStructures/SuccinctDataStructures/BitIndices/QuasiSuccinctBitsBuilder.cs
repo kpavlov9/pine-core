@@ -76,14 +76,12 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public QuasiSuccinctBits Build()
-        {
-            return new QuasiSuccinctBits(
+            => new QuasiSuccinctBits(
                 size: _position,
                 lowBitsCount: _lowBitsCount,
                 lowBitsMask: _lowBitsMask,
                 lowBits: _lowBits.Build(),
                 highBits: _highBitsBuilder.Build());
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public nuint MaxLength() => _maxLength;

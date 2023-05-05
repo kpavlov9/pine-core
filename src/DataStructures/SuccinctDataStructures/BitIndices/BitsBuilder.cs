@@ -57,7 +57,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             var marrowBits = MemoryMarshal.Cast<byte, Vector<byte>>(bits);
 
             //[Hack]: unsafe operation and we shouldn't add any items to the list while operating with the span.
-            var marrowData = MemoryMarshal.Cast<nuint, Vector<byte>>(CollectionsMarshal.AsSpan(_data));
+            var marrowData =
+                MemoryMarshal.Cast<nuint, Vector<byte>>(CollectionsMarshal.AsSpan(_data));
 
             for (var i = 0; i < marrowBits.Length; i++)
             {
@@ -75,9 +76,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public static BitsBuilder OfFixedLength(nuint length)
-        {
-            return new BitsBuilder(new nuint[GetCapacity(length)]);
-        }
+            => new BitsBuilder(new nuint[GetCapacity(length)]);
 
         public static BitsBuilder OfFixedLength(byte[] bits)
         {
@@ -96,9 +95,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             Bits.GetBit(position: position, data: _data);
 
         public Bits Build()
-        {
-            return new Bits(_position, _data.ToImmutableArray());
-        }
+            => new Bits(_position, _data.ToImmutableArray());
 
         public BitsBuilder Set(uint position)
         {
@@ -142,7 +139,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             if (bitsCount < 0 || bitsCount > NativeBitCount)
             {
                 throw new ArgumentOutOfRangeException(
-                    $"The given bits count of '{bitsCount}' exceeds the valid range: [0, {sizeof(long)}]."
+                    @$"The given bits count of '{bitsCount}'
+ exceeds the valid range: [0, {sizeof(long)}]."
                 );
             }
 
@@ -193,9 +191,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public BitsBuilder Add(uint bits, int bitsCount)
-        {
-            return AddBits((nuint)bits, bitsCount);
-        }
+            => AddBits((nuint)bits, bitsCount);
 
         public BitsBuilder AddBits(IList<byte> values)
         {
@@ -242,16 +238,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return this;
         }
 
-
-
         public BitsBuilder Add(bool bitValue)
-        {
-            return bitValue ? AddSetBits(1) : AddUnsetBits(1);
-        }
+            => bitValue ? AddSetBits(1) : AddUnsetBits(1);
 
         public IList<nuint> GetData()
-        {
-            return _data;
-        }
+            => _data;
     }
 }
