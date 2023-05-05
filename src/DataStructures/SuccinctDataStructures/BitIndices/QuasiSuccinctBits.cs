@@ -31,7 +31,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             _lowBitsMask = lowBitsMask;
         }
 
-        public nuint Get(nuint position)
+        public nuint GetBit(nuint position)
         {
             nuint high = _highBits.SelectSetBits(position) - position;
             if (_lowBitsCount == 0) return high;
@@ -41,10 +41,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return high << _lowBitsCount | low;
         }
 
-        public nuint Get(int position)
-        {
-            return Get((nuint)position);
-        }
+        public nuint GetBit(int position)
+            => GetBit((nuint)position);
 
         public static QuasiSuccinctBits Read(BinaryReader reader)
         {

@@ -120,7 +120,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             var offsetCount = (int)ClassBitOffsets[@class];
 
             var superBlockIndex = blockPosition / SuperBlockFactor;
-            var offsetPosition = offsetPosSamples.Get(superBlockIndex);
+            var offsetPosition = offsetPosSamples.GetBit(superBlockIndex);
             var j = superBlockIndex * SuperBlockFactor;
 
             while (j < blockPosition)
@@ -183,11 +183,11 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             var superBlockSize = SuperBlockSize;
 
             nuint superBlockIndex = blockIndex / superBlockFactor;
-            nuint rank = _rankSamples.Get(superBlockIndex);
+            nuint rank = _rankSamples.GetBit(superBlockIndex);
             if (superBlockIndex + 1 < _rankSamples.Size)
             {
                 // FetchBits the next sample.
-                nuint rankNext = _rankSamples.Get(superBlockIndex + 1);
+                nuint rankNext = _rankSamples.GetBit(superBlockIndex + 1);
                 nuint delta = rankNext - rank;
                 if (delta == 0)
                 {
@@ -235,7 +235,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             while (left < right)
             {
                 nuint pivot = left + right >> 1;
-                nuint rankAtThePivot = rankSamples.Get(pivot);
+                nuint rankAtThePivot = rankSamples.GetBit(pivot);
                 if (bitCountCutoff < rankAtThePivot)
                 {
                     right = pivot;
@@ -250,8 +250,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             nuint blockPosition = right * SuperBlockFactor;
             var blockSize = BlockSize;
 
-            var rank = rankSamples.Get(right);
-            nuint delta = rankSamples.Get(right + 1) - rank;
+            var rank = rankSamples.GetBit(right);
+            nuint delta = rankSamples.GetBit(right + 1) - rank;
 
             if (delta == SuperBlockSize)
             {
@@ -302,7 +302,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             {
                 nuint pivot = left + right >> 1;
                 nuint rankAtThePivot =
-                    pivot * superBlockSize - _rankSamples.Get(pivot);
+                    pivot * superBlockSize - _rankSamples.GetBit(pivot);
 
                 if (position < rankAtThePivot)
                 {
@@ -316,8 +316,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             right--;
 
             nuint j = right * SuperBlockFactor;
-            nuint rank = _rankSamples.Get(right);
-            nuint delta = _rankSamples.Get(right + 1) - rank;
+            nuint rank = _rankSamples.GetBit(right);
+            nuint delta = _rankSamples.GetBit(right + 1) - rank;
 
             if (delta == 0)
             {
