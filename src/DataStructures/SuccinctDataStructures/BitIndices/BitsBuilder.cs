@@ -204,17 +204,16 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public BitsBuilder AddSetBits(int bitsCount)
         {
-            var ones = nuint.MaxValue;
             for (var i = 0; i < bitsCount / NativeBitCount; i++)
             {
-                AddBits(ones, NativeBitCount);
+                AddBits(nuint.MaxValue, NativeBitCount);
             }
 
             var r = bitsCount % NativeBitCount;
 
             if (r > 0)
             {
-                AddBits(ones, r);
+                AddBits(nuint.MaxValue, r);
             }
 
             return this;
@@ -222,17 +221,16 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public BitsBuilder AddUnsetBits(int bitsCount)
         {
-            const nuint zeros = NUIntZero;
             for (var i = 0; i < bitsCount / NativeBitCount; i++)
             {
-                AddBits(zeros, NativeBitCount);
+                AddBits(NUIntZero, NativeBitCount);
             }
 
             var r = bitsCount % NativeBitCount;
 
             if (r > 0)
             {
-                AddBits(zeros, r);
+                AddBits(NUIntZero, r);
             }
 
             return this;
