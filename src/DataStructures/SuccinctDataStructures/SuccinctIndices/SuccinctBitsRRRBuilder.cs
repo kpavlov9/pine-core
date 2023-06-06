@@ -168,14 +168,14 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         }
 
         private void InitializeBuilders(
-            nuint size,
+            int size,
             nuint blocksCount,
             out BitsBuilder classValuesBuilder,
             out BitsBuilder offsetValuesBuilder,
             out QuasiSuccinctBitsBuilder rankSamplesBuilder,
             out QuasiSuccinctBitsBuilder offsetPositionSamplesBuilder)
         {
-            var superBlocksCount = GetSuperBlocksCount();
+            var superBlocksCount = (int)GetSuperBlocksCount();
             classValuesBuilder = OfFixedLength(BitsPerClass * blocksCount);
             offsetValuesBuilder = OfFixedLength(MaxBitsPerOffset * blocksCount);
             rankSamplesBuilder = new QuasiSuccinctBitsBuilder(
@@ -266,7 +266,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             }
         }
         private static SuccinctBitsRRR BuildSuccinctBitsRRR(
-            nuint size,
+            int size,
             in Bits bits,
             nuint blocksCount,
             BitsBuilder classValuesBuilder,
@@ -288,7 +288,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 offsetPositionSamples: offsetPositionSamples);
 #endif
             return new SuccinctBitsRRR(
-                size: size,
+                size: (nuint)size,
                 setBitsCount: rankSum,
                 rankSamples: rankSamples,
                 offsetPositionSamples: offsetPositionSamples,
@@ -299,8 +299,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
         public SuccinctBitsRRR Build()
         {
             var bits = _bits.Build();
-            nuint size = bits.Size;
-            nuint blocksCount = GetBlocksCount();
+            int size = (int)bits.Size;
+            var blocksCount = GetBlocksCount();
 
             InitializeBuilders(
                 size,

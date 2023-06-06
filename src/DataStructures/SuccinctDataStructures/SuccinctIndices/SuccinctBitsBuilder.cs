@@ -48,15 +48,15 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             Build();
         }
 
-        public SuccinctBitsBuilder(nuint size)
+        public SuccinctBitsBuilder(int size)
         {
             _values =
                 new List<nuint>(
                     new nuint[
-                        (int)((size + NativeBitCountMinusOne) / NativeBitCount)
+                        (size + NativeBitCountMinusOne) / NativeBitCount
                         ]);
             _ranks = new List<nuint>();
-            _size = size;
+            _size = (nuint)size;
             _setBitsCount = 0;
         }
 

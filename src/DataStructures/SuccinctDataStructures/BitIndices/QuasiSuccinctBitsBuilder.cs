@@ -26,15 +26,15 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public nuint Size => _position;
 
-        public QuasiSuccinctBitsBuilder(nuint length, nuint upperBound)
+        public QuasiSuccinctBitsBuilder(int length, int upperBound)
         {
-            _maxLength = length;
-            _upperBound = upperBound;
+            _maxLength = (nuint)length;
+            _upperBound = (nuint)upperBound;
 
-            _lowBitsCount = Math.Max(0, (int)Math.Floor(Math.Log(upperBound / length, 2)));
+            _lowBitsCount = Math.Max(0, int.Log2(upperBound / length));
             _lowBitsMask = (NUIntOne << _lowBitsCount) - 1;
 
-            nuint numLowBits = length * (uint)_lowBitsCount;
+            nuint numLowBits = (nuint)(length * _lowBitsCount);
             _lowBits = OfFixedLength(numLowBits);
 
             // Give the theoretical lower bound as the initial capacity

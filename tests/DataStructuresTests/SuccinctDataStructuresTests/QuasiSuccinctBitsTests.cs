@@ -7,7 +7,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         [Fact]
         public void set_and_get()
         {
-            const nuint upperBound = 100 * 10000;
+            const int upperBound = 100 * 10000;
             var bitsBuilder = new QuasiSuccinctBitsBuilder(10000, upperBound);
             var rand = new Random();
             var value = (nuint)rand.Next() % 100;
@@ -38,8 +38,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var stream = new MemoryStream();
             var writer = new BinaryWriter(stream);
 
-            const nuint length = 100000;
-            const nuint upperBound = 100 * length;
+            const int length = 100000;
+            const int upperBound = 100 * length;
 
             var bitsBuilder = new QuasiSuccinctBitsBuilder(length, upperBound);
             var rand = new Random();
