@@ -15,10 +15,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
     public readonly struct Bits : IBitIndices<Bits>
     {
         private readonly ImmutableArray<nuint> _data;
-        private readonly uint _position;
+        private readonly nuint _position;
         public nuint Size => _position;
 
-        public Bits(uint position, ImmutableArray<nuint> data)
+        public Bits(nuint position, ImmutableArray<nuint> data)
         {
             _position = position;
             _data = data;
@@ -115,9 +115,11 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public void Write(BinaryWriter writer)
         {
-            writer.Write(_position);
+            writer.WriteNUInt(_position);
 
-            var size = (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+            var size =
+                (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+            
             writer.Write(size);
 
             WriteNUInt(
@@ -155,7 +157,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public static Bits Read(BinaryReader reader)
         {
-            var position = reader.ReadUInt32();
+            var position = reader.ReadNUInt();
 
             var size = reader.ReadInt32();
 

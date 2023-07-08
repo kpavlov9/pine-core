@@ -19,9 +19,9 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
     public sealed class BitsBuilder
     {
         private List<nuint> _data;
-        private uint _position = 0;
+        private nuint _position = 0;
 
-        public uint Size => _position;
+        public nuint Size => _position;
 
         private static int GetCapacity(ulong initialCapacity) =>
             ((int)initialCapacity + NativeBitCountMinusOne) / NativeBitCount;
