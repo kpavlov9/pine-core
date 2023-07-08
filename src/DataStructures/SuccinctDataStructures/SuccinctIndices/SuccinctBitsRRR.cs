@@ -173,7 +173,8 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
                 bitsPerClass));
         }
 
-        public nuint RankUnsetBits(nuint bitPositionCutoff) => bitPositionCutoff - RankSetBits(bitPositionCutoff);
+        public nuint RankUnsetBits(nuint bitPositionCutoff) => 
+            bitPositionCutoff - RankSetBits(bitPositionCutoff);
 
         public nuint RankSetBits(nuint bitPositionCutoff)
         {
@@ -279,7 +280,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             }
             nuint block = FetchBlock(blockPosition);
             nuint bitAlignedBlock = block << NativeBitCount - blockSize;
-            return blockPosition * blockSize + NativeBitOps.Select(
+            return blockPosition * blockSize + Select(
                 bitAlignedBlock,
                 (int)bitCountCutoff);
         }
@@ -338,7 +339,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 
             nuint block = FetchBlock(j);
             nuint bitAlignedBlock = block << NativeBitCount - blockSize;
-            return j * blockSize + NativeBitOps.Select(~bitAlignedBlock, (int)position);
+            return j * blockSize + Select(~bitAlignedBlock, (int)position);
         }
 
         public static SuccinctBitsRRR Read(BinaryReader reader)

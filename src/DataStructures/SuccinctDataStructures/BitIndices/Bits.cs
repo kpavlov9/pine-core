@@ -109,9 +109,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public nuint FetchBits(nuint position)
-        {
-            return InternalFetch(position, NativeBitCount);
-        }
+            => InternalFetch(
+                position: position,
+                bitsCount: NativeBitCount,
+                data: _data);
 
         public void Write(BinaryWriter writer)
         {
@@ -130,7 +131,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public void Write(string filename)
         {
-            using var writer = new BinaryWriter(new FileStream(filename, FileMode.Create, FileAccess.Write));
+            using var writer =
+                new BinaryWriter(
+                    new FileStream(
+                        filename,
+                        FileMode.Create,
+                        FileAccess.Write));
+
             Write(writer);
         }
 
@@ -170,7 +177,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public static Bits Read(string filename)
         {
-            using var reader = new BinaryReader(new FileStream(filename, FileMode.Open, FileAccess.Read));
+            using var reader =
+                new BinaryReader(
+                    new FileStream(
+                        filename,
+                        FileMode.Open,
+                        FileAccess.Read));
+
             return Read(reader);
         }
 
@@ -183,13 +196,18 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
             var bits = (Bits)obj;
 
-            int validDataRange = (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
-            return bits._position == _position && bits._data.Take(validDataRange).SequenceEqual(_data.Take(validDataRange));
+            var validDataRange =
+                (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+
+            return bits._position == _position &&
+                    bits._data
+                        .Take(validDataRange)
+                        .SequenceEqual(_data.Take(validDataRange));
         }
 
         public override int GetHashCode()
         {
-            var sum = 19UL;
+            var sum = (nuint)19;
             foreach (nuint value in _data)
             {
                 sum += 31 * value;
@@ -198,14 +216,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public static bool operator ==(Bits left, Bits right)
-        {
-            return left.Equals(right);
-        }
+            => left.Equals(right);
 
         public static bool operator !=(Bits left, Bits right)
-        {
-            return !(left == right);
-        }
+            => !(left == right);
     }
 
 }

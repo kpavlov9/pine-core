@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
@@ -10,14 +9,16 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
     {
         private static readonly Action<BitsBuilder, ulong, int> _push;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Push64(BitsBuilder builder, ulong bits, int bitsCount) =>
             builder.AddBits(unchecked((nuint)bits), bitsCount);
 
         private static void Push32(BitsBuilder builder, ulong bits, int bitsCount)
         {
             GetUIntLittleEndian(bits, out var lo, out var hi);
-            builder.AddBits(unchecked((nuint)lo), bitsCount);
-            builder.AddBits(unchecked((nuint)hi), bitsCount);
+            builder
+                .AddBits(unchecked((nuint)lo), bitsCount)
+                .AddBits(unchecked((nuint)hi), bitsCount);
         }
 
         static NativeBitsBuilderHelper()

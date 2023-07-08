@@ -67,7 +67,6 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             bitPositionCutoff--;
 
             CalculateInitialRank(
-                values: _values,
                 ranks: _ranks,
                 bitPositionCutoff: bitPositionCutoff,
                 rank: ref rank,
@@ -96,7 +95,6 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
             bitPositionCutoff--;
 
             CalculateInitialRank(
-                values: _values,
                 ranks: _ranks,
                 bitPositionCutoff: bitPositionCutoff,
                 rank: ref rank,

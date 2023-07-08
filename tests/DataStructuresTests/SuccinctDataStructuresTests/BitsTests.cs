@@ -20,9 +20,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                     bitsBuilder.AddBits(B11111, 5);
                 }
 
-                Assert.Equal(nuint.MaxValue, bitsBuilder.GetData()[0]);
-                Assert.Equal(nuint.MaxValue, bitsBuilder.GetData()[1]);
-                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.GetData()[2]);
+                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
+                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[1]);
+                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.Data[2]);
             }
             else
             {// 64-Bit System:
@@ -34,8 +34,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
 
                 Assert.Equal((nuint)75, bitsBuilder.Size);
-                Assert.Equal(nuint.MaxValue, bitsBuilder.GetData()[0]);
-                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.GetData()[1]);
+                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
+                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.Data[1]);
             }
 
             var bits = bitsBuilder.Build();
@@ -90,7 +90,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);
 
-            Assert.Equal(nuint.MaxValue, bitsBuilder.GetData()[0]);
+            Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
 
             var bits = bitsBuilder.Build();
 
@@ -113,7 +113,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);
 
-            Assert.Equal(NUIntZero, bitsBuilder.GetData()[0]);
+            Assert.Equal(NUIntZero, bitsBuilder.Data[0]);
 
             var bits = bitsBuilder.Build();
 

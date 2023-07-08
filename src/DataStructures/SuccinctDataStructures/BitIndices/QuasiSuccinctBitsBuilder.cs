@@ -76,7 +76,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         }
 
         public QuasiSuccinctBits Build()
-            => new QuasiSuccinctBits(
+            => new (
                 size: _position,
                 lowBitsCount: _lowBitsCount,
                 lowBitsMask: _lowBitsMask,

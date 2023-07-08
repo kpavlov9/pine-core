@@ -1,9 +1,7 @@
-﻿using System;
-using System.Linq;
-using System.Numerics;
-using System.Collections.Generic;
+﻿using System.Numerics;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
@@ -52,7 +50,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
         {
         }
 
-        private void Fill(ReadOnlySpan<byte> bits)
+        private BitsBuilder Fill(ReadOnlySpan<byte> bits)
         {
             var marrowBits = MemoryMarshal.Cast<byte, Vector<byte>>(bits);
 
@@ -73,17 +71,16 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             {
                 Add(bits[i], BitCountInByte);
             }
+
+            return this;
         }
 
         public static BitsBuilder OfFixedLength(nuint length)
-            => new BitsBuilder(new nuint[GetCapacity(length)]);
+            => new(new nuint[GetCapacity(length)]);
 
         public static BitsBuilder OfFixedLength(byte[] bits)
-        {
-            var b = OfFixedLength((nuint)(bits.Length * BitCountInByte));
-            b.Fill(bits);
-            return b;
-        }
+            => OfFixedLength((nuint)(bits.Length * BitCountInByte))
+               .Fill(bits);
 
         public void Clear()
         {
@@ -91,11 +88,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             _position = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool GetBit(nuint position) =>
             Bits.GetBit(position: position, data: _data);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Bits Build()
-            => new Bits(_position, _data.ToImmutableArray());
+            => new(_position, _data.ToImmutableArray());
 
         public BitsBuilder Set(uint position)
         {
@@ -190,6 +189,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return this;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public BitsBuilder Add(uint bits, int bitsCount)
             => AddBits((nuint)bits, bitsCount);
 
@@ -236,10 +236,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             return this;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public BitsBuilder Add(bool bitValue)
             => bitValue ? AddSetBits(1) : AddUnsetBits(1);
 
-        public IList<nuint> GetData()
-            => _data;
+        public IList<nuint> Data => _data;
     }
 }

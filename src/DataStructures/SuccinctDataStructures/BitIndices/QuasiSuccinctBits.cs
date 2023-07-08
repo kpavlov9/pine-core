@@ -64,7 +64,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public static QuasiSuccinctBits Read(string filename)
         {
-            var reader = new BinaryReader(new FileStream(filename, FileMode.Open, FileAccess.Read));
+            var reader =
+                new BinaryReader(
+                    new FileStream(
+                        filename,
+                        FileMode.Open,
+                        FileAccess.Read));
+
             return Read(reader);
         }
 
@@ -81,7 +87,13 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 
         public void Write(string filename)
         {
-            var writer = new BinaryWriter(new FileStream(filename, FileMode.Create, FileAccess.Write));
+            var writer =
+                new BinaryWriter(
+                    new FileStream(
+                        filename,
+                        FileMode.Create,
+                        FileAccess.Write));
+
             Write(writer);
         }
 
@@ -93,7 +105,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
             }
 
             var bits = (QuasiSuccinctBits)obj;
-            return _size == bits._size && _lowBits.Equals(bits._lowBits) && _highBits.Equals(bits._highBits);
+            return 
+                _size == bits._size &&
+                _lowBits.Equals(bits._lowBits) &&
+                _highBits.Equals(bits._highBits);
         }
 
         public override int GetHashCode()
