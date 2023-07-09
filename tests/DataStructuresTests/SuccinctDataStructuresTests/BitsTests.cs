@@ -42,7 +42,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (nuint i = 0; i < 15; i++)
             {
                 nuint value = bits.FetchBits(i * 5, 5);
+                nuint builderValue = bitsBuilder.FetchBits(i * 5, 5);
                 Assert.Equal(value, B11111);
+                Assert.Equal(builderValue, value);
             }
         }
 
@@ -120,7 +122,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (nuint i = 0; i < 1500; i++)
             {
                 nuint v = bits.FetchBits(i, 1);
+                nuint builderV = bitsBuilder.FetchBits(i, 1);
+
                 Assert.Equal(NUIntZero, v);
+                Assert.Equal(NUIntZero, builderV);
             }
         }
 
@@ -216,6 +221,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(32));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
+
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(0));
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(32));
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(64));
             }
             else
             {// 64-Bit System:
@@ -230,6 +239,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bits.FetchBits(0));
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
                 Assert.Equal(NUIntOne, bits.FetchBits(128));
+
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(0));
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(64));
+                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(128));
             }
         }
 
@@ -260,6 +273,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             }
 
             Assert.Equal(bits.FetchBits(0), value);
+            Assert.Equal(bitsBuilder.FetchBits(0), value);
         }
 
         [Fact]
@@ -288,6 +302,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             }
 
             Assert.Equal(bits.FetchBits(0), value);
+            Assert.Equal(bitsBuilder.FetchBits(0), value);
         }
     }
 }

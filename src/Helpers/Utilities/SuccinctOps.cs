@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
@@ -34,8 +33,17 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             if (position >= size)
             {
                 throw new IndexOutOfRangeException(
-                    $@"The argument {nameof(position)}
- exceeds the sequence length {size}");
+                    $@"The argument {nameof(position)} exceeds the sequence length {size}");
+            }
+        }
+
+        internal static void ValidateFetchBits(int bitsCount)
+        {
+            if (bitsCount < 0 || bitsCount > NativeBitCount)
+            {
+                throw new ArgumentOutOfRangeException(
+                    $"The given bits count '{bitsCount}' exceeds the valid range: [0, nuint size]."
+                );
             }
         }
 

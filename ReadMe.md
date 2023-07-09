@@ -7,7 +7,12 @@ This library is a part of the efforts of KG Intelligence to open source our tech
 ## Content
 
 * Data Structures:
-    * Succinct Data Structures: compressed bit representations offering query methods to be used without the need of decompression. Such query methods include `Rank`, `Select`.
+    * Succinct Data Structures: compressed bit representations offering query methods to be used without the need of decompression. Such query methods include `Rank`, `Select`. The succinct datastructure APIs are:
+        * `IBits` with properties `IReadOnlyList<nuint> Data { get; }` and `nuint Size { get; }`
+        * `IBitIndices` with properties `public nuint Size { get; }` and methods `bool GetBit(nuint index)`
+        * `ISuccinctIndices` with properties `nuint SetBitsCount { get; }`, `nuint UnsetBitsCount { get; }`, `nuint Size { get; }` and methods `nuint RankSetBits(nuint bitPositionCutoff)`, `nuint RankUnsetBits(nuint bitPositionCutoff)`, `nuint SelectSetBits(nuint bitCountCutoff)`, `nuint SelectUnsetBits(nuint bitCountCutoff)`
+        * `ISuccinctCompressedIndices` with the same properties and methods as `ISuccinctIndices`
+        * `ISerializableBits` with mehtods `void Write(BinaryWriter writer)`, `void Write(string filePath)`, `static abstract TSelf Read(BinaryReader reader)` and `static abstract TSelf Read(string filePath)`
 
 * Utility Methods:
     * Bit Twiddling Operations not included in `System.Numerics.BitOperations` such as: `ReverseBits`,  `Rank`, `Select`; these methods operate on `uint`, `ulong`, and also on the native-sized integers `nuint`.

@@ -31,7 +31,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         [Fact]
         public void static_initializer()
         {
-            nuint[][] classCounts = SuccinctBitsRRRBuilder.ClassCounts;
+            nuint[][] classCounts = SuccinctCompressedBitsBuilder.ClassCounts;
             for (var n = 0; n < classCounts.Length; n++)
             {
                 for (var m = 0; m <= n; m++)
@@ -46,14 +46,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         {
             nuint value = 1;
             var @class = (uint)BitOperations.PopCount(value);
-            var block = SuccinctBitsRRRBuilder.OffsetOf(value, @class);
-            nuint value2 = SuccinctBitsRRR.InverseOffsetOf(block, @class);
+            var block = SuccinctCompressedBitsBuilder.OffsetOf(value, @class);
+            nuint value2 = SuccinctCompressedBits.InverseOffsetOf(block, @class);
             Assert.Equal(value, value2);
 
             value = 0;
             @class = (uint)BitOperations.PopCount(value);
-            block = SuccinctBitsRRRBuilder.OffsetOf(value, @class);
-            value2 = SuccinctBitsRRR.InverseOffsetOf(block, @class);
+            block = SuccinctCompressedBitsBuilder.OffsetOf(value, @class);
+            value2 = SuccinctCompressedBits.InverseOffsetOf(block, @class);
 
             Assert.Equal(value, value2);
 
@@ -68,8 +68,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 value &= (NUIntOne << NativeBitCountMinusOne) - 1;
 
                 @class = (uint)BitOperations.PopCount(value);
-                block = SuccinctBitsRRRBuilder.OffsetOf(value, @class);
-                value2 = SuccinctBitsRRR.InverseOffsetOf(block, @class);
+                block = SuccinctCompressedBitsBuilder.OffsetOf(value, @class);
+                value2 = SuccinctCompressedBits.InverseOffsetOf(block, @class);
                 Assert.Equal(value, value2);
             }
         }
@@ -82,7 +82,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             bitsBuilder.AddUnsetBits(63);
             bitsBuilder.AddSetBits(1);
 
-            var rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            var rrrBitsBuilder = new SuccinctCompressedBitsBuilder(bitsBuilder);
             var rrrBits = rrrBitsBuilder.Build();
 
             var bits = bitsBuilder.Build();
@@ -111,7 +111,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
             }
 
-            rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            rrrBitsBuilder = new SuccinctCompressedBitsBuilder(bitsBuilder);
             rrrBits = rrrBitsBuilder.Build();
             bits = bitsBuilder.Build();
 
@@ -132,7 +132,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var rand = new Random();
             nuint bitsLength = 10000 + (nuint)rand.Next() % 10000;
             var bitsBuilder = new BitsBuilder(bitsLength);
-            var rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsLength);
+            var rrrBitsBuilder = new SuccinctCompressedBitsBuilder(bitsLength);
             for (uint i = 0; i < bitsLength; i++)
             {
                 if (rand.Next() % 2 != 0)
@@ -149,7 +149,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
             }
 
-            var rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
+            var rrrBits = new SuccinctCompressedBitsBuilder(bitsBuilder).Build();
             var rrBitsFromSize = rrrBitsBuilder.Build();
             var bits = new SuccinctBitsBuilder(bitsBuilder).Build();
             Assert.Equal(bits.Size, rrrBits.Size);
@@ -203,8 +203,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bits0Builder.Unset(i);
             }
 
-            var rrrBits1 = new SuccinctBitsRRRBuilder(bits1Builder).Build();
-            var rrrBits0 = new SuccinctBitsRRRBuilder(bits0Builder).Build();
+            var rrrBits1 = new SuccinctCompressedBitsBuilder(bits1Builder).Build();
+            var rrrBits0 = new SuccinctCompressedBitsBuilder(bits0Builder).Build();
 
             nuint counter = 0;
 
@@ -220,7 +220,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var rand = new Random();
             nuint length = 10000 + (nuint)rand.Next() % 10000;
             var bitsBuilder2 = new BitsBuilder(length);
-            var rrrBitsBuilder2 = new SuccinctBitsRRRBuilder(length);
+            var rrrBitsBuilder2 = new SuccinctCompressedBitsBuilder(length);
 
             for (uint i = 0; i < length; i++)
             {
@@ -240,7 +240,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
                 
             }
-            var rrr2 = new SuccinctBitsRRRBuilder(bitsBuilder2).Build();
+            var rrr2 = new SuccinctCompressedBitsBuilder(bitsBuilder2).Build();
             var rrr2FromSize = rrrBitsBuilder2.Build();
 
             counter = 0;
@@ -252,7 +252,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             }
 
             var bitsBuilder = new BitsBuilder(length);
-            var rrrBitsBuilder = new SuccinctBitsRRRBuilder(length);
+            var rrrBitsBuilder = new SuccinctCompressedBitsBuilder(length);
 
             for (uint i = 0; i < length; i++)
             {
@@ -270,7 +270,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
             }
 
-            var rrrBits = new SuccinctBitsRRRBuilder(bitsBuilder).Build();
+            var rrrBits = new SuccinctCompressedBitsBuilder(bitsBuilder).Build();
             var rrrBitsFromSize = rrrBitsBuilder.Build();
             var bits = new SuccinctBitsBuilder(bitsBuilder).Build();
 
@@ -316,7 +316,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             const nuint iterations = 100000;
             var bitsBuilder = new BitsBuilder(iterations);
-            var rrrBitsBuilder = new SuccinctBitsRRRBuilder(iterations);
+            var rrrBitsBuilder = new SuccinctCompressedBitsBuilder(iterations);
 
             var rand = new Random();
             for (uint i = 0; i < iterations; i++)
@@ -335,7 +335,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 }
             }
 
-            rrrBitsBuilder = new SuccinctBitsRRRBuilder(bitsBuilder);
+            rrrBitsBuilder = new SuccinctCompressedBitsBuilder(bitsBuilder);
             var rrrBits = rrrBitsBuilder.Build();
             var rrrBitsFromSize = rrrBitsBuilder.Build();
 
@@ -345,7 +345,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bits = bitsBuilder.Build();
 
             stream1.Seek(0, SeekOrigin.Begin);
-            var rrrBits2 = SuccinctBitsRRR.Read(new BinaryReader(stream1));
+            var rrrBits2 = SuccinctCompressedBits.Read(new BinaryReader(stream1));
 
             Assert.Equal(rrrBits.Size, rrrBits2.Size);
             for (nuint i = 0; i < rrrBits.Size; i++)
