@@ -5,7 +5,9 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KGIntelligence.PineCore", "src\KGIntelligence.PineCore.csproj", "{94A8A55D-4945-4C2F-9893-5844D73B41FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KGIntelligence.PineCore.Tests", "tests\KGIntelligence.PineCore.Tests.csproj", "{7CCA48FD-4E91-4294-BB56-4A9C26135F91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KGIntelligence.PineCore.Tests", "tests\KGIntelligence.PineCore.Tests.csproj", "{7CCA48FD-4E91-4294-BB56-4A9C26135F91}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PineEffects", "..\pine-effect\PineEffects.csproj", "{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{7CCA48FD-4E91-4294-BB56-4A9C26135F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CCA48FD-4E91-4294-BB56-4A9C26135F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CCA48FD-4E91-4294-BB56-4A9C26135F91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,4 +34,8 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\pine-effect\PineEffects.csproj" />
+  </ItemGroup>
 </Project>
