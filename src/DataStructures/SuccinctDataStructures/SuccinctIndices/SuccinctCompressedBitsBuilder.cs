@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.BitsBuilder;
-using System.Runtime.CompilerServices;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
@@ -103,19 +103,14 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         _bits = new BitsBuilder(0);
     }
 
-    public SuccinctCompressedBitsBuilder(BitsBuilder bits)
-    {
-        _bits = bits;
-    }
-
-    public SuccinctCompressedBitsBuilder(IEnumerable<nuint> bits)
+    public SuccinctCompressedBitsBuilder(IBits bits)
     {
         _bits = new BitsBuilder(bits);
     }
 
-    public SuccinctCompressedBitsBuilder(nuint size)
+    public SuccinctCompressedBitsBuilder(nuint initialSize)
     {
-        _bits = new BitsBuilder(size);
+        _bits = new BitsBuilder(initialSize);
     }
 
     public SuccinctCompressedBitsBuilder(IReadOnlyList<byte> bytes)
@@ -129,6 +124,9 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
     }
 
     public void Clear() => _bits.Clear();
+
+    public void ClearAndInitialize(IBits bits)
+        => _bits.ClearAndInitialize(bits);
 
     public void PushZeroes(int bitsCount)
         => _bits.AddUnsetBits(bitsCount);
@@ -338,4 +336,22 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     ISuccinctCompressedIndices IBitsBuilder.BuildSuccinctCompressedIndices() => Build();
+
+    public IBitIndices ClearAndBuildBitIndices(IBits bits)
+    {
+        ClearAndInitialize(bits);
+        return Build();
+    }
+
+    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
+    {
+        ClearAndInitialize(bits);
+        return Build();
+    }
+
+    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
+    {
+        ClearAndInitialize(bits);
+        return Build();
+    }
 }

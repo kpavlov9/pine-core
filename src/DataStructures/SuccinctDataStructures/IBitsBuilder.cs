@@ -11,4 +11,10 @@ public interface IBitsBuilder
     public ISuccinctCompressedIndices BuildSuccinctCompressedIndices();
 
     public void Clear();
+
+
+    public IBitIndices ClearAndBuildBitIndices(IBits bits);
+    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits);
+
+    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits);
 }

@@ -7,8 +7,11 @@ using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitsBuilderHelper;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+
+using PineEffects.src.Monads.MaybeMonad;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 
@@ -26,17 +29,21 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
 
     public IReadOnlyList<nuint> Data => _data;
 
-    private static int GetCapacity(ulong initialCapacity) =>
-        ((int)initialCapacity + NativeBitCountMinusOne) / NativeBitCount;
+    private Maybe<SuccinctBitsBuilder> _succintBitsBuilder;
+    private Maybe<SuccinctCompressedBitsBuilder> _succintCompressedBitsBuilder;
 
-    public BitsBuilder(ulong initialCapacity)
+    private static nuint GetCapacity(nuint initialCapacity) =>
+        (initialCapacity + NativeBitCountMinusOne) / NativeBitCount;
+
+    public BitsBuilder(nuint initialCapacity)
     {
         _data = new List<nuint>(new nuint[GetCapacity(initialCapacity)]);
     }
 
-    public BitsBuilder(IEnumerable<nuint> bits)
+    public BitsBuilder(IBits bits)
     {
-        _data = bits.ToList();
+        _data = new();
+        InitializeFromBits(bits);
     }
 
     public BitsBuilder(byte[] bytes)
@@ -50,7 +57,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     {
     }
 
-    private BitsBuilder Fill(ReadOnlySpan<byte> bits)
+    private void Fill(ReadOnlySpan<byte> bits)
     {
         var marrowBits = MemoryMarshal.Cast<byte, Vector<byte>>(bits);
 
@@ -71,14 +78,12 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         {
             Add(bits[i], BitCountInByte);
         }
-
-        return this;
     }
 
     public static BitsBuilder OfFixedLength(nuint length)
-        => new(new nuint[GetCapacity(length)]);
+        => new(GetCapacity(length));
 
-    public static BitsBuilder OfFixedLength(byte[] bits)
+    public static void OfFixedLength(byte[] bits)
         => OfFixedLength((nuint)(bits.Length * BitCountInByte))
            .Fill(bits);
 
@@ -86,6 +91,18 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     {
         _data.Clear();
         _position = 0;
+    }
+
+    public void ClearAndInitialize(IBits bits)
+    {
+        Clear();
+        InitializeFromBits(bits);
+    }
+
+    private void InitializeFromBits(IBits bits)
+    {
+        _data.AddRange(bits.Data);
+        _position = bits.Size;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,13 +116,45 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IBitIndices IBitsBuilder.BuildBitIndices() => Build();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctIndices IBitsBuilder.BuildSuccinctIndices()
-        => new SuccinctBitsBuilder(_data).Build();
+    IBitIndices IBitsBuilder.ClearAndBuildBitIndices(IBits bits)
+    {
+        Clear();
+        _data.AddRange(bits.Data);
+        _position = bits.Size;
+        return Build();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctCompressedIndices IBitsBuilder.BuildSuccinctCompressedIndices()
-        => new SuccinctCompressedBitsBuilder(_data).Build();
+    public ISuccinctIndices BuildSuccinctIndices()
+        => _succintBitsBuilder
+            .Reduce(
+                @default: new SuccinctBitsBuilder(this),
+                maybeAfter: out _succintBitsBuilder)
+            .Build();
+
+    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
+    {
+        Clear();
+        InitializeFromBits(bits);
+
+        return BuildSuccinctIndices();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
+        => _succintCompressedBitsBuilder
+            .Reduce(
+                @default: new SuccinctCompressedBitsBuilder(this),
+                maybeAfter: out _succintCompressedBitsBuilder)
+            .Build();
+
+    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
+    {
+        Clear();
+        InitializeFromBits(bits);
+
+        return BuildSuccinctCompressedIndices();
+    }
 
     public void Set(nuint position)
     {
@@ -215,14 +264,6 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(uint bits, int bitsCount)
         => AddBits((nuint)bits, bitsCount);
-
-    public void AddBits(IList<byte> values)
-    {
-        foreach (byte value in values)
-        {
-            Add(value, sizeof(byte) * 8);
-        }
-    }
 
     public void AddSetBits(int bitsCount)
     {

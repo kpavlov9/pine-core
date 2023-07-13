@@ -6,6 +6,7 @@ using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using PineEffects.src.Monads.MaybeMonad;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
@@ -13,7 +14,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 /// Builds the bits sequence <see cref="SuccinctBits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctIndices
+public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISuccinctIndices
 {
     private readonly List<nuint> _values;
     private readonly List<nuint> _ranks;
@@ -27,6 +28,7 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
     public nuint SetBitsCount => _setBitsCount;
     public nuint UnsetBitsCount => _size - _setBitsCount;
 
+    private Maybe<SuccinctCompressedBitsBuilder> _succintCompressedBitsBuilder;
 
     public SuccinctBitsBuilder()
     {
@@ -38,81 +40,68 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
 
     public SuccinctBitsBuilder(IBits bits)
     {
-        ConstructFromBits(
-                bits: bits,
-                values: out _values,
-                ranks: out _ranks,
-                size: out _size);
-        Build();
+        _values = new List<nuint>();
+        _ranks = new List<nuint>();
+
+        InitializeFromBits(bits: bits);
     }
 
-    public SuccinctBitsBuilder(IEnumerable<nuint> bits)
-    {
-        ConstructFromBits(
-                bits: new BitsBuilder(bits),
-                values: out _values,
-                ranks: out _ranks,
-                size: out _size);
-
-        Build();
-    }
-
-    private static void ConstructFromBits(
-        IBits bits,
-        out List<nuint> values,
-        out List<nuint> ranks,
-        out nuint size)
-    {
-        values = new List<nuint>();
-        ranks = new List<nuint>();
-
-        foreach (nuint bitValues in bits.Data)
-        {
-            values.Add(ReverseBits(bitValues));
-        }
-
-        size = bits.Size;
-    }
-
-    public SuccinctBitsBuilder(int size)
+    public SuccinctBitsBuilder(int initialSize)
     {
         _values =
             new List<nuint>(
                 new nuint[
-                    (size + NativeBitCountMinusOne) / NativeBitCount
+                    (initialSize + NativeBitCountMinusOne) / NativeBitCount
                     ]);
         _ranks = new List<nuint>();
-        _size = (nuint)size;
+        _size = (nuint)initialSize;
         _setBitsCount = 0;
-    }
-
-    public SuccinctBitsBuilder(IReadOnlyList<byte> bytes)
-    {
-        ConstructFromBytes(
-            bytes: bytes,
-            values: out _values,
-            ranks: out _ranks,
-            size: out _size);
     }
 
     public SuccinctBitsBuilder(IEnumerable<byte> bytes)
     {
+        _values = new List<nuint>();
+        _ranks = new List<nuint>();
+
+        InitializeFromBytes(bytes);
+    }
+
+    private SuccinctBits InitializeFromBits(
+        IBits bits)
+    {
+        _values.Clear();
+        _ranks.Clear();
+
+        ConstructFromBits(
+            bits: bits,
+            values: _values,
+            ranks: _ranks,
+            size: out _size);
+
+        return Build();
+    }
+
+    private SuccinctBits InitializeFromBytes(
+        IEnumerable<byte> bytes)
+    {
+        _values.Clear();
+        _ranks.Clear();
+
         ConstructFromBytes(
             bytes: bytes,
-            values: out _values,
-            ranks: out _ranks,
+            values: _values,
+            ranks: _ranks,
             size: out _size);
+
+        return Build();
     }
 
     private static void ConstructFromBytes(
-        IEnumerable<byte> bytes,
-        out List<nuint> values,
-        out List<nuint> ranks,
-        out nuint size)
+      IEnumerable<byte> bytes,
+      List<nuint> values,
+      List<nuint> ranks,
+      out nuint size)
     {
-        values = new List<nuint>();
-        ranks = new List<nuint>();
-
         nuint value = 0;
         nuint i = 0;
         foreach (byte b in bytes)
@@ -131,12 +120,32 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
         size = i * BitCountInByte;
     }
 
+    private static void ConstructFromBits(
+        IBits bits,
+        List<nuint> values,
+        List<nuint> ranks,
+        out nuint size)
+    {
+        foreach (nuint bitValues in bits.Data)
+        {
+            values.Add(ReverseBits(bitValues));
+        }
+
+        size = bits.Size;
+    }
+
     public void Clear()
     {
         _values.Clear();
         _ranks.Clear();
         _size = 0;
         _setBitsCount = 0;
+    }
+
+    public SuccinctBits ClearAndInitialize(IBits bits)
+    {
+        Clear();
+        return InitializeFromBits(bits: bits);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -179,6 +188,7 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
         GetMask(rSmall, out var mask);
 
         _values[qSmall] = _values[qSmall] | mask;
+        _setBitsCount++;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -196,7 +206,6 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
             unsetBitsCount: _size - _setBitsCount,
             ranks: _ranks,
             values: _values);
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankUnsetBits(nuint bitPositionCutoff)
@@ -238,6 +247,7 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
         GetMask(rSmall, out var mask);
 
         _values[qSmall] = _values[qSmall] & ~mask;
+        _setBitsCount--;
     }
 
     public SuccinctBits Build()
@@ -265,15 +275,35 @@ public sealed class SuccinctBitsBuilder: IBitIndices, IBitsBuilder, ISuccinctInd
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    IBitIndices IBitsBuilder.BuildBitIndices() => Build();
+    public IBitIndices BuildBitIndices() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctIndices IBitsBuilder.BuildSuccinctIndices() => Build();
+    public ISuccinctIndices BuildSuccinctIndices() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctCompressedIndices IBitsBuilder.BuildSuccinctCompressedIndices() =>
-        new SuccinctCompressedBitsBuilder(_values).Build();
+    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
+        => _succintCompressedBitsBuilder
+            .Reduce(
+                @default: new SuccinctCompressedBitsBuilder(this),
+                maybeAfter: out _succintCompressedBitsBuilder)
+            .Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode() => Bits.GetHashCode(values: _values);
+
+    public IBitIndices ClearAndBuildBitIndices(IBits bits)
+    {
+        return ClearAndInitialize(bits);
+    }
+
+    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
+    {
+        return ClearAndInitialize(bits);
+    }
+
+    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
+    {
+        ClearAndInitialize(bits);
+        return BuildSuccinctCompressedIndices();
+    }
 }
