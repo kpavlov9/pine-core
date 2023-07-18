@@ -27,11 +27,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (var i = 0; i < 10000; i++)
             {
                 Assert.Equal(bits.GetBit((nuint)i), values[i]);
-                Assert.Equal(bitsBuilder.GetBit((nuint)i), values[i]);
             }
 
             Assert.Throws<ArgumentOutOfRangeException>(() => bits.GetBit(10000));
-            Assert.Throws<ArgumentOutOfRangeException>(() => bitsBuilder.GetBit(10000));
         }
 
         [Fact]
@@ -67,7 +65,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             for (nuint i = 0; i < bits.Size; i++)
             {
                 Assert.Equal(bits.GetBit(i), bits2.GetBit(i));
-                Assert.Equal(bits.GetBit(i), bitsBuilder.GetBit(i));
             }
 
             Assert.Equal(bits, bits2);

@@ -1,4 +1,5 @@
-﻿using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+﻿using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
@@ -72,7 +73,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bitsBuilder = new SuccinctBitsBuilder();
 
             Assert.Throws<IndexOutOfRangeException>(() => bits.RankSetBits(100));
-            Assert.Throws<IndexOutOfRangeException>(() => bitsBuilder.RankSetBits(100));
         }
 
         [Fact]
@@ -83,9 +83,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             {
                 Assert.Equal(ranksCount, _bits1.RankSetBits(v));
                 Assert.Equal(ranksCount, _bits0.RankUnsetBits(v));
-
-                Assert.Equal(ranksCount, _bv1Builder.RankSetBits(v));
-                Assert.Equal(ranksCount, _bv0Builder.RankUnsetBits(v));
 
                 ranksCount++;
             }
@@ -100,23 +97,18 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(v, _bits1.SelectSetBits(positionsCount));
                 Assert.Equal(v, _bits0.SelectUnsetBits(positionsCount));
 
-                Assert.Equal(v, _bv1Builder.SelectSetBits(positionsCount));
-                Assert.Equal(v, _bv0Builder.SelectUnsetBits(positionsCount));
-
                 positionsCount++;
             }
         }
 
         [Fact]
-        public void selectBefore_build()
+        public void select_before_build()
         {
             var bv = new SuccinctBits();
             var bvBuilder = new SuccinctBitsBuilder();
 
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => bv.SelectSetBits(100));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => bvBuilder.SelectSetBits(100));
         }
 
         [Fact]
@@ -144,15 +136,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 () => _bits1.RankUnsetBits(_bits1.Size + 1));
             Assert.Throws<IndexOutOfRangeException>(
                 () => _bits1.RankSetBits(_bits1.Size + 1));
-
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bv1Builder.RankUnsetBits(_bv0Builder.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bv1Builder.RankSetBits(_bv0Builder.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bv1Builder.RankUnsetBits(_bv1Builder.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bv1Builder.RankSetBits(_bv1Builder.Size + 1));
         }
 
         [Fact]
@@ -166,15 +149,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 () => _bits0.SelectSetBits(_bits0.SetBitsCount));
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => _bits0.SelectUnsetBits(_bits0.UnsetBitsCount));
-
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bv1Builder.SelectSetBits(_bv1Builder.SetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bv1Builder.SelectUnsetBits(_bv1Builder.UnsetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bv0Builder.SelectSetBits(_bv0Builder.SetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bv0Builder.SelectUnsetBits(_bv0Builder.UnsetBitsCount));
         }
 
         [Fact]
@@ -250,7 +224,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             rand.NextBytes(bytes);
 
             var bits = new BitsBuilder(count);
-            bits.AddBits(bytes);
+            bits.AddBytes(bytes);
 
             var bitsBuilder1 = new SuccinctBitsBuilder(bytes);
             var bitsBuilder2 = new SuccinctBitsBuilder(bits);
@@ -268,12 +242,274 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.True(bits1.SelectUnsetBits(i) == bits2.SelectUnsetBits(i), $"Failed at {i}.");
                 Assert.True(bits1.RankSetBits(i) == bits2.RankSetBits(i), $"Failed at {i}.");
                 Assert.True(bits1.RankUnsetBits(i) == bits2.RankUnsetBits(i), $"Failed at {i}.");
+            }
+        }
 
-                Assert.True(bitsBuilder1.GetBit(i) == bitsBuilder2.GetBit(i), $"Failed at {i}.");
-                Assert.True(bitsBuilder1.SelectSetBits(i) == bitsBuilder2.SelectSetBits(i), $"Failed at {i}.");
-                Assert.True(bitsBuilder1.SelectUnsetBits(i) == bitsBuilder2.SelectUnsetBits(i), $"Failed at {i}.");
-                Assert.True(bitsBuilder1.RankSetBits(i) == bitsBuilder2.RankSetBits(i), $"Failed at {i}.");
-                Assert.True(bitsBuilder1.RankUnsetBits(i) == bitsBuilder2.RankUnsetBits(i), $"Failed at {i}.");
+
+        [Fact]
+        public void clear()
+        {
+            var bitsBuilder = new SuccinctBitsBuilder();
+
+            Assert.True(bitsBuilder.Size == 0);
+
+            bitsBuilder.Set(64);
+
+            Assert.True(bitsBuilder.Size == 64 + 1);
+
+            bitsBuilder.Clear();
+
+            Assert.True(bitsBuilder.Size == 0);
+        }
+
+        [Fact]
+        public void clear_and_build_succinct_indices_bits()
+        {
+
+            var bitsBuilder0 = new BitsBuilder(_bits0);
+            var bitsBuilder1 = new BitsBuilder(_bits1);
+
+            bitsBuilder0.Unset(1);
+            bitsBuilder1.Set(1);
+
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+
+            Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
+            Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
+            }
+        }
+
+        [Fact]
+        public void clear_and_build_succinct_indices_succinct()
+        {
+            var bitsBuilder0 = new SuccinctBitsBuilder(_bits0);
+            var bitsBuilder1 = new SuccinctBitsBuilder(_bits1);
+
+            bitsBuilder0.Unset(1);
+            bitsBuilder1.Set(1);
+
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+
+            Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
+            Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
+            }
+        }
+
+        [Fact]
+        public void clear_and_build_succinct_indices_succinct_compressed()
+        {
+            var bitsBuilder0 = new SuccinctCompressedBitsBuilder(_bits0);
+            var bitsBuilder1 = new SuccinctCompressedBitsBuilder(_bits1);
+
+            bitsBuilder0.Unset(1);
+            bitsBuilder1.Set(1);
+
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+
+            Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
+            Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
+            }
+        }
+
+        [Fact]
+        public void build_succinct_indices_succinct()
+        {
+            var succinctIndices0 = _bv0Builder.BuildSuccinctBits();
+            var succinctIndices1 = _bv1Builder.BuildSuccinctBits();
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
+            }
+        }
+
+
+        [Fact]
+        public void build_succinct_indices_bits()
+        {
+            var bitsBuilder0 = new BitsBuilder(_bits0);
+            var bitsBuilder1 = new BitsBuilder(_bits1);
+
+            var succinctIndices0 = bitsBuilder0.BuildSuccinctBits();
+            var succinctIndices1 = bitsBuilder1.BuildSuccinctBits();
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
+            }
+        }
+
+        [Fact]
+        public void build_succinct_indices_succinct_compressed()
+        {
+            var bitsBuilder0 = new SuccinctCompressedBitsBuilder(_bits0);
+            var bitsBuilder1 = new SuccinctCompressedBitsBuilder(_bits1);
+
+            var succinctIndices0 = bitsBuilder0.BuildSuccinctBits();
+            var succinctIndices1 = bitsBuilder1.BuildSuccinctBits();
+
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices1.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices1.SetBitsCount);
+            Assert.Equal(_values[_values.Count - 1] + 1, succinctIndices0.Size);
+            Assert.Equal((nuint)_values.Count, succinctIndices0.UnsetBitsCount);
+
+            foreach (nuint v in _values)
+            {
+                Assert.True(succinctIndices1.GetBit(v));
+                Assert.False(succinctIndices0.GetBit(v));
+            }
+
+            nuint ranksCount = 0;
+            foreach (var v in _values)
+            {
+                Assert.Equal(ranksCount, succinctIndices1.RankSetBits(v));
+                Assert.Equal(ranksCount, succinctIndices0.RankUnsetBits(v));
+
+                ranksCount++;
+            }
+
+            nuint positionsCount = 0;
+            foreach (nuint v in _values)
+            {
+                Assert.Equal(v, succinctIndices1.SelectSetBits(positionsCount));
+                Assert.Equal(v, succinctIndices0.SelectUnsetBits(positionsCount));
+
+                positionsCount++;
             }
         }
     }

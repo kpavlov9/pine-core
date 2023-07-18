@@ -1,10 +1,198 @@
-﻿using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+﻿using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
+using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 {
     public class BitsTests
     {
+        [Fact]
+        public void clear()
+        {
+            var bitsBuilder = new BitsBuilder();
+
+            Assert.True(bitsBuilder.Size == 0);
+
+            bitsBuilder.Set(64);
+
+            Assert.True(bitsBuilder.Size == 64 + 1);
+
+            bitsBuilder.Clear();
+
+            Assert.True(bitsBuilder.Size == 0);
+        }
+
+        [Fact]
+        public void clear_and_build_bit_indices_bits()
+        {
+            var bitsBuilder = new BitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bits = bitsBuilder.Build();
+
+            bitsBuilder.Set(65);
+
+            var bitIndices = bitsBuilder.ClearAndBuildBitIndices(bits);
+
+            Assert.True(bitIndices.GetBit(64));
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
+
+        [Fact]
+        public void clear_and_build_bit_indices_succinct()
+        {
+            var bitsBuilder = new SuccinctBitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bits = bitsBuilder.Build();
+
+            bitsBuilder.Set(65);
+
+            var bitIndices = bitsBuilder.ClearAndBuildBitIndices(bits);
+
+            Assert.True(bitIndices.GetBit(64));
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
+        [Fact]
+        public void clear_and_build_bit_indices_succinct_compressed()
+        {
+            var compressedBitsBuilder = new SuccinctCompressedBitsBuilder(128);
+            compressedBitsBuilder.Set(64);
+
+            var bitsBuilder = new BitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bits = bitsBuilder.Build();
+
+            bitsBuilder.Set(65);
+
+            var bitIndices = compressedBitsBuilder.ClearAndBuildBitIndices(bits);
+
+            Assert.True(bitIndices.GetBit(64));
+            Assert.Equal(bitIndices.Size, compressedBitsBuilder.Size);
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
+        [Fact]
+        public void build_bit_indices_bits()
+        {
+            var bitsBuilder = new BitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.True(bitIndices.GetBit(64));
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
+
+        [Fact]
+        public void build_bit_indices_succinct()
+        {
+            var bitsBuilder = new SuccinctBitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.True(bitIndices.GetBit(64));
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
+        [Fact]
+        public void build_bit_indices_succinct_compressed()
+        {
+            var bitsBuilder = new SuccinctCompressedBitsBuilder(128);
+            bitsBuilder.Set(64);
+
+            var bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.True(bitIndices.GetBit(64));
+
+            for (uint i = 0; i < 128; i++)
+            {
+                bitsBuilder.Set(i);
+            }
+
+            bitIndices = bitsBuilder.BuildBitIndices();
+
+            Assert.Equal(bitIndices.Size, bitsBuilder.Size);
+
+            for (nuint i = 0; i < 128; i++)
+            {
+                Assert.True(bitIndices.GetBit(i));
+            }
+        }
+
         [Fact]
         public void add_and_fetch_bits()
         {
@@ -19,10 +207,11 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 {
                     bitsBuilder.AddBits(B11111, 5);
                 }
+                var bitsBuilderData = bitsBuilder.Data.ToArray();
 
-                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
-                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[1]);
-                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.Data[2]);
+                Assert.Equal(nuint.MaxValue, bitsBuilderData[0]);
+                Assert.Equal(nuint.MaxValue, bitsBuilderData[1]);
+                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilderData[2]);
             }
             else
             {// 64-Bit System:
@@ -33,12 +222,16 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                     bitsBuilder.AddBits(B11111, 5);
                 }
 
+                var bitsBuilderData = bitsBuilder.Data.ToArray();
+
                 Assert.Equal((nuint)75, bitsBuilder.Size);
-                Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
-                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilder.Data[1]);
+                Assert.Equal(nuint.MaxValue, bitsBuilderData[0]);
+                Assert.Equal((NUIntOne << 11) - 1 << 53, bitsBuilderData[1]);
             }
 
             var bits = bitsBuilder.Build();
+            Assert.Equal(bits.Size, bitsBuilder.Size);
+
             for (nuint i = 0; i < 15; i++)
             {
                 nuint value = bits.FetchBits(i * 5, 5);
@@ -57,19 +250,15 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bits = bitsBuilder.Build();
             Assert.True(bits.GetBit(64));
 
-            nuint B11111 = Is32BitSystem
-                ? Convert.ToUInt32("11111", 2)
-                : (nuint)Convert.ToUInt64("11111", 2);
-
             for (uint i = 0; i < 128; i++)
             {
                 bitsBuilder.Set(i);
                 Assert.True(bitsBuilder.GetBit(i) == true);
             }
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => bitsBuilder.Set(128));
-
             bits = bitsBuilder.Build();
+
+            Assert.Equal(bits.Size, bitsBuilder.Size);
 
             for (nuint i = 0; i < 128; i++)
             {
@@ -92,9 +281,13 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);
 
-            Assert.Equal(nuint.MaxValue, bitsBuilder.Data[0]);
+            var bitsBuilderData = bitsBuilder.Data.ToArray();
+
+            Assert.Equal(nuint.MaxValue, bitsBuilderData[0]);
 
             var bits = bitsBuilder.Build();
+
+            Assert.Equal(bits.Size, bitsBuilder.Size);
 
             for (nuint i = 0; i < 1500; i++)
             {
@@ -108,16 +301,20 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         {
             var bitsBuilder = new BitsBuilder(1024);
 
-            for (int i = 0; i < 15; i++)
+            for (var i = 0; i < 15; i++)
             {
                 bitsBuilder.AddUnsetBits(100);
             }
 
             Assert.Equal((nuint)1500, bitsBuilder.Size);
 
-            Assert.Equal(NUIntZero, bitsBuilder.Data[0]);
+            var bitsBuilderData = bitsBuilder.Data.ToArray();
+
+            Assert.Equal(NUIntZero, bitsBuilderData[0]);
 
             var bits = bitsBuilder.Build();
+
+            Assert.Equal(bits.Size, bitsBuilder.Size);
 
             for (nuint i = 0; i < 1500; i++)
             {
@@ -150,7 +347,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 B11111 = (nuint)Convert.ToUInt64("11111", 2);
             }
 
-            for (int i = 0; i < 15; i++)
+            for (var i = 0; i < 15; i++)
             {
                 bitsBuilder.AddBits(B11111, 5);
             }
@@ -167,7 +364,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         [Fact]
         public void from_ul_list()
         {
-            nuint[] values = new nuint[] { 1, 1, 1 };
+            var values = new nuint[] { 1, 1, 1 };
             var bitsBuilder = new BitsBuilder(values);
             var bits = bitsBuilder.Build();
 
@@ -199,6 +396,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
                 Assert.Equal(NUIntOne, bits.FetchBits(128));
             }
+
+            Assert.Equal((nuint)values.Count() * NativeBitCount, bitsBuilder.Size);
+            Assert.Equal(bits.Size, bitsBuilder.Size);
         }
 
         [Fact]
@@ -244,6 +444,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bitsBuilder.FetchBits(64));
                 Assert.Equal(NUIntOne, bitsBuilder.FetchBits(128));
             }
+
+
+            Assert.Equal((nuint)values.Count() * NativeBitCount, bitsBuilder.Size);
+            Assert.Equal(bits.Size, bitsBuilder.Size);
         }
 
         [Fact]
@@ -266,11 +470,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             Assert.True(bits.GetBit(71));
 
             nuint value = values[0];
-            for (int i = 1; i < 8; i++)
+            for (var i = 1; i < 8; i++)
             {
                 value <<= 8;
                 value |= values[i];
             }
+
+            Assert.Equal((nuint)values.Length * BitCountInByte, bitsBuilder.Size);
+            Assert.Equal(bits.Size, bitsBuilder.Size);
 
             Assert.Equal(bits.FetchBits(0), value);
             Assert.Equal(bitsBuilder.FetchBits(0), value);
@@ -280,8 +487,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         public void from_byte_enumerable()
         {
             var values = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1 };
-            IEnumerable<byte> e = values;
-            var bitsBuilder = new BitsBuilder(e);
+            IEnumerable<byte> enumerableValues = values;
+            var bitsBuilder = new BitsBuilder(enumerableValues);
 
             Assert.True(bitsBuilder.GetBit(7));
             Assert.True(bitsBuilder.GetBit(15));
@@ -300,6 +507,9 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 value <<= 8;
                 value |= values[i];
             }
+
+            Assert.Equal((nuint)values.Length * BitCountInByte, bitsBuilder.Size);
+            Assert.Equal(bits.Size, bitsBuilder.Size);
 
             Assert.Equal(bits.FetchBits(0), value);
             Assert.Equal(bitsBuilder.FetchBits(0), value);
