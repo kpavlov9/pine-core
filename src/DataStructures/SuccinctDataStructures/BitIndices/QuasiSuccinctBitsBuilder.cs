@@ -73,16 +73,6 @@ public sealed class QuasiSuccinctBitsBuilder
         return this;
     }
 
-    public nuint GetBit(nuint position)
-    {
-        nuint high = _highBitsBuilder.SelectSetBits(position) - position;
-        if (_lowBitsCount == 0) return high;
-
-        nuint lowPosition = position * (nuint)_lowBitsCount;
-        nuint low = _lowBits.FetchBits(lowPosition, _lowBitsCount);
-        return high << _lowBitsCount | low;
-    }
-
     public QuasiSuccinctBits Build()
         => new (
             size: _position,
@@ -92,6 +82,5 @@ public sealed class QuasiSuccinctBitsBuilder
             highBits: _highBitsBuilder.Build());
 
     public nuint MaxLength => _maxLength;
-
     public nuint UpperBound => _upperBound;
 }

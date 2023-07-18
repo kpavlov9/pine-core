@@ -14,7 +14,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 /// Builds the bits sequence <see cref="SuccinctBits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISuccinctIndices
+public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
 {
     private readonly List<nuint> _values;
     private readonly List<nuint> _ranks;
@@ -187,44 +187,14 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
 
         GetMask(rSmall, out var mask);
 
+        var newValue = _values[qSmall] | mask;
+
+        if (_values[qSmall] != newValue)
+        {
+            _setBitsCount++;
+        }
+
         _values[qSmall] = _values[qSmall] | mask;
-        _setBitsCount++;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint SelectSetBits(nuint bitCountCutoff)
-        => SuccinctBits.SelectSetBits(
-                bitCountCutoff: bitCountCutoff,
-                setBitsCount: _setBitsCount,
-                ranks: _ranks,
-                values: _values);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint SelectUnsetBits(nuint bitCountCutoff)
-    => SuccinctBits.SelectUnsetBits(
-            bitCountCutoff: bitCountCutoff,
-            unsetBitsCount: _size - _setBitsCount,
-            ranks: _ranks,
-            values: _values);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint RankUnsetBits(nuint bitPositionCutoff)
-    {
-        ValidatePosition(position: bitPositionCutoff, size: _size);
-        return SuccinctBits.RankUnsetBits(
-            bitPositionCutoff: bitPositionCutoff,
-            ranks: _ranks,
-            values: _values);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint RankSetBits(nuint bitPositionCutoff)
-    {
-        ValidatePosition(position: bitPositionCutoff, size: _size);
-        return SuccinctBits.RankSetBits(
-            bitPositionCutoff: bitPositionCutoff,
-            ranks: _ranks,
-            values: _values);
     }
 
     public void Unset(nuint position)
@@ -245,9 +215,14 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
         }
 
         GetMask(rSmall, out var mask);
+        var newValue = _values[qSmall] & ~mask;
 
-        _values[qSmall] = _values[qSmall] & ~mask;
-        _setBitsCount--;
+        if (_values[qSmall] != newValue)
+        {
+            _setBitsCount--;
+        }
+
+        _values[qSmall] = newValue;
     }
 
     public SuccinctBits Build()
