@@ -27,7 +27,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
 
     public nuint Size => _position;
 
-    public IReadOnlyList<nuint> Data => _data;
+    public IEnumerable<nuint> Data => _data;
 
     private Maybe<SuccinctBitsBuilder> _succintBitsBuilder;
     private Maybe<SuccinctCompressedBitsBuilder> _succintCompressedBitsBuilder;

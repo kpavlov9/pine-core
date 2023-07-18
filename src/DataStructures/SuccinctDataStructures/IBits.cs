@@ -7,5 +7,5 @@ public interface IBits
     /// </summary>
     public nuint Size { get; }
 
-    IReadOnlyList<nuint> Data { get;  }
+    IEnumerable<nuint> Data { get;  }
 }

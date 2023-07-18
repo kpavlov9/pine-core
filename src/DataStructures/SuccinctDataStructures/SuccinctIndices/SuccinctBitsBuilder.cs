@@ -23,7 +23,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
 
     public nuint Size => _size;
 
-    public IReadOnlyList<nuint> Data => _values;
+    public IEnumerable<nuint> Data => _values.Select(ReverseBits);
 
     public nuint SetBitsCount => _setBitsCount;
     public nuint UnsetBitsCount => _size - _setBitsCount;

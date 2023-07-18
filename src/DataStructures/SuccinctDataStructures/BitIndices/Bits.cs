@@ -19,7 +19,7 @@ public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
     private readonly nuint _position;
     public nuint Size => _position;
 
-    public IReadOnlyList<nuint> Data => _data;
+    public IEnumerable<nuint> Data => _data;
 
     public Bits(nuint position, ImmutableArray<nuint> data)
     {

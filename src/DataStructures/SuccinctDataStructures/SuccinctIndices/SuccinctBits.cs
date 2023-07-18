@@ -23,7 +23,7 @@ public readonly struct SuccinctBits : IBits, IBitIndices, ISerializableBits<Succ
 
     public nuint Size => _size;
 
-    public IReadOnlyList<nuint> Data => _values;
+    public IEnumerable<nuint> Data => _values.Select(ReverseBits);
 
     public SuccinctBits(
         nuint size,
