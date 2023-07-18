@@ -40,6 +40,33 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         _data = new List<nuint>(new nuint[GetCapacity(initialCapacity)]);
     }
 
+    public BitsBuilder()
+    {
+        _data = new List<nuint>();
+    }
+
+    public BitsBuilder(IReadOnlyList<nuint> data)
+    {
+        _data = new();
+
+        InitializeFromData(
+            inputData: data,
+            inputDataSize: (nuint)(NativeBitCount * data.Count),
+            outputData: _data,
+            outputPosition: out _position);
+    }
+
+    public BitsBuilder(IEnumerable<nuint> data)
+    {
+        _data = new();
+
+        InitializeFromData(
+            inputData: data,
+            inputDataSize: (nuint)(NativeBitCount * data.Count()),
+            outputData: _data,
+            outputPosition: out _position);
+    }
+
     public BitsBuilder(IBits bits)
     {
         _data = new();
@@ -49,7 +76,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     public BitsBuilder(byte[] bytes)
         : this((nuint)bytes.Length * BitCountInByte)
     {
-        Fill(bytes);
+        InitialFill(bytes);
     }
 
     public BitsBuilder(IEnumerable<byte> bytes)
@@ -57,7 +84,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     {
     }
 
-    private void Fill(ReadOnlySpan<byte> bits)
+    private void InitialFill(ReadOnlySpan<byte> bits)
     {
         var marrowBits = MemoryMarshal.Cast<byte, Vector<byte>>(bits);
 
@@ -80,12 +107,13 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         }
     }
 
-    public static BitsBuilder OfFixedLength(nuint length)
-        => new(GetCapacity(length));
-
-    public static void OfFixedLength(byte[] bits)
-        => OfFixedLength((nuint)(bits.Length * BitCountInByte))
-           .Fill(bits);
+    public void AddBytes(IReadOnlyList<byte> bytes)
+    {
+        for (var i = 0; i < bytes.Count; i++)
+        {
+            AddBits(bytes[i], BitCountInByte);
+        }
+    }
 
     public void Clear()
     {
@@ -99,11 +127,29 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         InitializeFromBits(bits);
     }
 
-    private void InitializeFromBits(IBits bits)
+    private static void InitializeFromData(
+        IEnumerable<nuint> inputData,
+        nuint inputDataSize,
+        in List<nuint> outputData,
+        out nuint outputPosition)
     {
-        _data.AddRange(bits.Data);
-        _position = bits.Size;
+        if(outputData.Count > 0)
+        {
+            throw new Exception(
+                $"The data size should be 0 before initialization, but it is {outputData.Count}.");
+        }
+
+        outputData.AddRange(inputData);
+        outputPosition = inputDataSize;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void InitializeFromBits(IBits bits)
+        => InitializeFromData(
+            inputData: bits.Data,
+            inputDataSize: bits.Size,
+            outputData: _data,
+            outputPosition: out _position);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetBit(nuint position) =>

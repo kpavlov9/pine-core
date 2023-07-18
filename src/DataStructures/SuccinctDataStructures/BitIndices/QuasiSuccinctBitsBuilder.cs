@@ -35,10 +35,10 @@ public sealed class QuasiSuccinctBitsBuilder
         _lowBitsMask = (NUIntOne << _lowBitsCount) - 1;
 
         nuint numLowBits = (nuint)(length * _lowBitsCount);
-        _lowBits = OfFixedLength(numLowBits);
+        _lowBits = new (numLowBits);
 
         // Give the theoretical lower bound as the initial capacity
-        _highBitsBuilder = new SuccinctBitsBuilder(length);
+        _highBitsBuilder = new ((nuint)length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

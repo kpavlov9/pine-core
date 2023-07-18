@@ -174,8 +174,8 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         out QuasiSuccinctBitsBuilder offsetPositionSamplesBuilder)
     {
         var superBlocksCount = (int)GetSuperBlocksCount();
-        classValuesBuilder = OfFixedLength(BitsPerClass * blocksCount);
-        offsetValuesBuilder = OfFixedLength(MaxBitsPerOffset * blocksCount);
+        classValuesBuilder = new(BitsPerClass * blocksCount);
+        offsetValuesBuilder = new(MaxBitsPerOffset * blocksCount);
         rankSamplesBuilder = new QuasiSuccinctBitsBuilder(
             superBlocksCount,
             size);

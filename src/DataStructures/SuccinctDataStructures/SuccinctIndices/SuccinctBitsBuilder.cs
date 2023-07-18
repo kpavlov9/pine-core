@@ -46,7 +46,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
         InitializeFromBits(bits: bits);
     }
 
-    public SuccinctBitsBuilder(int initialSize)
+    public SuccinctBitsBuilder(nuint initialSize)
     {
         _values =
             new List<nuint>(
@@ -54,7 +54,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
                     (initialSize + NativeBitCountMinusOne) / NativeBitCount
                     ]);
         _ranks = new List<nuint>();
-        _size = (nuint)initialSize;
+        _size = initialSize;
         _setBitsCount = 0;
     }
 
