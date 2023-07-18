@@ -17,7 +17,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 ///
 /// The abbreviation 'RRR' comes from the first letters of the familiy names of 3 authors of the paper.
 /// </summary>
-public readonly struct SuccinctCompressedBits : IBitIndices, ISerializableBits<SuccinctCompressedBits>, ISuccinctCompressedIndices
+public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompressedBits>, ISuccinctCompressedIndices
 {
     private readonly Bits _classValues;
     private readonly Bits _offsetValues;

@@ -14,7 +14,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 /// <summary>
 /// Not compressed bit sequence offering rank and select queries.
 /// </summary>
-public readonly struct SuccinctBits : IBits, IBitIndices, ISerializableBits<SuccinctBits>, ISuccinctIndices
+public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, ISuccinctIndices
 {
     private readonly ImmutableArray<nuint> _values;
     private readonly ImmutableArray<nuint> _ranks;

@@ -1,6 +1,6 @@
 ﻿namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures;
 
-public interface ISuccinctIndices
+public interface ISuccinctIndices : IBitIndices
 {
     /// <summary>
     /// Returns the count of set bits up to the given position
@@ -35,9 +35,4 @@ public interface ISuccinctIndices
     /// Returns the count of the unset bits.
     /// </summary>
     public nuint UnsetBitsCount { get; }
-
-    /// <summary>
-    /// Returns the count of all bits.
-    /// </summary>
-    public nuint Size { get; }
 }
