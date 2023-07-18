@@ -6,12 +6,11 @@ public interface IBitsBuilder
     public void Unset(nuint position);
 
     public IBitIndices BuildBitIndices();
-    public ISuccinctIndices BuildSuccinctIndices();
+    public ISuccinctIndices BuildSuccinctBits();
 
     public ISuccinctCompressedIndices BuildSuccinctCompressedIndices();
 
     public void Clear();
-
 
     public IBitIndices ClearAndBuildBitIndices(IBits bits);
     public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits);

@@ -75,7 +75,6 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
         ConstructFromBits(
             bits: bits,
             values: _values,
-            ranks: _ranks,
             size: out _size);
 
         return Build();
@@ -90,7 +89,6 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
         ConstructFromBytes(
             bytes: bytes,
             values: _values,
-            ranks: _ranks,
             size: out _size);
 
         return Build();
@@ -99,7 +97,6 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
     private static void ConstructFromBytes(
       IEnumerable<byte> bytes,
       List<nuint> values,
-      List<nuint> ranks,
       out nuint size)
     {
         nuint value = 0;
@@ -123,7 +120,6 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
     private static void ConstructFromBits(
         IBits bits,
         List<nuint> values,
-        List<nuint> ranks,
         out nuint size)
     {
         foreach (nuint bitValues in bits.Data)
@@ -154,8 +150,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
         if (position >= _size)
         {
             throw new IndexOutOfRangeException(
-                $@"The argument {nameof(position)}
- exceeds the sequence length {_size}");
+                $"The argument {nameof(position)} exceeds the sequence length {_size}");
         }
 
         GetBlockPositions(
@@ -266,6 +261,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
             {
                 _ranks.Add(_setBitsCount);
             }
+
             _setBitsCount += unchecked((nuint)RankOfReversed(
                 value: _values[i],
                 bitPositionCutoff: SmallBlockSize,
@@ -283,7 +279,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
     public IBitIndices BuildBitIndices() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ISuccinctIndices BuildSuccinctIndices() => Build();
+    public ISuccinctIndices BuildSuccinctBits() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
@@ -297,14 +293,10 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
     public override int GetHashCode() => Bits.GetHashCode(values: _values);
 
     public IBitIndices ClearAndBuildBitIndices(IBits bits)
-    {
-        return ClearAndInitialize(bits);
-    }
+        => ClearAndInitialize(bits);
 
     public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
-    {
-        return ClearAndInitialize(bits);
-    }
+        => ClearAndInitialize(bits);
 
     public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
     {

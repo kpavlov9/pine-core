@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.BitsBuilder;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
@@ -329,13 +328,13 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    IBitIndices IBitsBuilder.BuildBitIndices() => Build();
+    public IBitIndices BuildBitIndices() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctIndices IBitsBuilder.BuildSuccinctIndices() => Build();
+    public ISuccinctIndices BuildSuccinctBits() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ISuccinctCompressedIndices IBitsBuilder.BuildSuccinctCompressedIndices() => Build();
+    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices() => Build();
 
     public IBitIndices ClearAndBuildBitIndices(IBits bits)
     {

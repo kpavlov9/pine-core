@@ -97,11 +97,11 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
             marrowData[i] = marrowBits[i];
         }
 
-        var cutoff = Vector<byte>.Count * marrowBits.Length;
+        var offset = Vector<byte>.Count * marrowBits.Length;
 
-        _position = (uint)(cutoff * BitCountInByte);
+        _position = (nuint)(offset * BitCountInByte);
 
-        for (var i = cutoff; i < bits.Length; i++)
+        for (var i = offset; i < bits.Length; i++)
         {
             Add(bits[i], BitCountInByte);
         }
@@ -121,6 +121,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         _position = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearAndInitialize(IBits bits)
     {
         Clear();
@@ -160,9 +161,9 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         => new(_position, _data.ToImmutableArray());
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    IBitIndices IBitsBuilder.BuildBitIndices() => Build();
+    public IBitIndices BuildBitIndices() => Build();
 
-    IBitIndices IBitsBuilder.ClearAndBuildBitIndices(IBits bits)
+    public IBitIndices ClearAndBuildBitIndices(IBits bits)
     {
         Clear();
         _data.AddRange(bits.Data);
@@ -171,7 +172,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ISuccinctIndices BuildSuccinctIndices()
+    public ISuccinctIndices BuildSuccinctBits()
         => _succintBitsBuilder
             .Reduce(
                 @default: new SuccinctBitsBuilder(this),
@@ -183,7 +184,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         Clear();
         InitializeFromBits(bits);
 
-        return BuildSuccinctIndices();
+        return BuildSuccinctBits();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -274,8 +275,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         if (bitsCount < 0 || bitsCount > NativeBitCount)
         {
             throw new ArgumentOutOfRangeException(
-                @$"The given bits count of '{bitsCount}'
- exceeds the valid range: [0, {sizeof(long)}]."
+                $"The given bits count of '{bitsCount}' exceeds the valid range: [0, {sizeof(long)}]."
             );
         }
 

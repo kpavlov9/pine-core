@@ -2,7 +2,6 @@
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.BitsBuilder;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 
@@ -53,8 +52,7 @@ public sealed class QuasiSuccinctBitsBuilder
         if (_lastValue > value)
         {
             throw new InvalidOperationException(
-                @$"The sequence should be non-decreasing,
- but the last value is '{_lastValue}' and the current one is '{value}'.");
+                $"The sequence should be non-decreasing, but the last value is '{_lastValue}' and the current one is '{value}'.");
         }
 
         if (value > _upperBound)
