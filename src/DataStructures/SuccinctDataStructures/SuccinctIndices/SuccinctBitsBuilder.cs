@@ -170,7 +170,12 @@ public sealed class SuccinctBitsBuilder: IBits, IBitIndices, IBitsBuilder, ISucc
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set(nuint position)
     {
-        if(position >= _size)
+        if (position % BlockRate == 0)
+        {
+            _ranks.Add(_setBitsCount);
+        }
+
+        if (position >= _size)
         {
             _size = position + 1;
         }

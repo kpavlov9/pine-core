@@ -205,15 +205,23 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     public void Set(nuint position)
     {
         int indexInList = (int)(position / NativeBitCount);
+
+        while (indexInList >= _data.Count)
+        {
+            _data.Add(0);
+        }
+
         int offset = (int)(position % NativeBitCount);
         nuint block = _data[indexInList];
         nuint mask = NUIntOne << NativeBitCountMinusOne - offset;
         block |= mask;
         _data[indexInList] = block;
 
-        if (position + 1 >= _position)
+        var positionPlusOne = position + 1;
+
+        if (positionPlusOne > _position)
         {
-            _position = position + 1;
+            _position = positionPlusOne;
         }
     }
 
@@ -237,15 +245,22 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
     public void Unset(nuint position)
     {
         int indexInList = (int)(position / NativeBitCount);
+        while (indexInList >= _data.Count)
+        {
+            _data.Add(0);
+        }
+
         int offset = (int)(position % NativeBitCount);
         nuint block = _data[indexInList];
         nuint mask = NUIntOne << NativeBitCountMinusOne - offset;
         block &= ~mask;
         _data[indexInList] = block;
 
-        if (position + 1 >= _position)
+        var positionPlusOne = position + 1;
+
+        if (positionPlusOne > _position)
         {
-            _position = position + 1;
+            _position = positionPlusOne;
         }
     }
 
