@@ -161,10 +161,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
 
         for (var j = begin; j < qSmall; j++)
         {
-            rank += unchecked((uint)RankOfReversed(
-                value: values[j],
-                bitPositionCutoff: SmallBlockSize,
-                blockSize: SmallBlockSize));
+            rank += PopCount(values[j]);
         }
 
         rank += unchecked((uint)RankOfReversed(
@@ -190,10 +187,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
 
         for (var j = begin; j < qSmall; j++)
         {
-            rank += unchecked((uint)RankOfReversed(
-                value: ~values[j],
-                bitPositionCutoff: SmallBlockSize,
-                blockSize: SmallBlockSize));
+            rank += PopCount(~values[j]);
         }
 
         rank += unchecked((uint)RankOfReversed(
@@ -232,10 +226,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
         int j = right * BlockRate;
         while (true)
         {
-            uint rank = unchecked((uint)RankOfReversed(
-                values[j],
-                SmallBlockSize,
-                SmallBlockSize));
+            uint rank = PopCount(values[j]);
 
             if (bitCountCutoff < rank)
             {
@@ -288,10 +279,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
         int j = right * BlockRate;
         while (true)
         {
-            uint rank = unchecked((uint)RankOfReversed(
-                ~values[j],
-                SmallBlockSize,
-                SmallBlockSize));
+            var rank = PopCount(~values[j]);
 
             if (bitCountCutoff < rank) { break; }
             j++;

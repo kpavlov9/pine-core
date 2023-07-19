@@ -155,8 +155,8 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
 
         GetBlockPositions(
             position,
-            out int qSmall,
-            out int rSmall);
+            out var qSmall,
+            out var rSmall);
 
         GetMask(rSmall, out var mask);
         return (_values[qSmall] & mask) != 0;
@@ -165,11 +165,6 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Set(nuint position)
     {
-        if (position % BlockRate == 0)
-        {
-            _ranks.Add(_setBitsCount);
-        }
-
         if (position >= _size)
         {
             _size = position + 1;
@@ -177,8 +172,8 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
 
         GetBlockPositions(
             position,
-            out int qSmall,
-            out int rSmall);
+            out var qSmall,
+            out var rSmall);
 
         while (qSmall >= _values.Count)
         {
@@ -206,8 +201,8 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
 
         GetBlockPositions(
             position,
-            out int qSmall,
-            out int rSmall);
+            out var qSmall,
+            out var rSmall);
 
         while (qSmall >= _values.Count)
         {
@@ -237,10 +232,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
                 _ranks.Add(_setBitsCount);
             }
 
-            _setBitsCount += unchecked((nuint)RankOfReversed(
-                value: _values[i],
-                bitPositionCutoff: SmallBlockSize,
-                blockSize: SmallBlockSize));
+            _setBitsCount += PopCount(value: _values[i]);
         }
 
         return new SuccinctBits(
