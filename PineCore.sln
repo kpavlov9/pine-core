@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KGIntelligence.PineCore", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KGIntelligence.PineCore.Tests", "tests\KGIntelligence.PineCore.Tests.csproj", "{7CCA48FD-4E91-4294-BB56-4A9C26135F91}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PineEffects", "..\pine-effect\PineEffects.csproj", "{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PineEffects", "..\pine-effects\PineEffects.csproj", "{0E66C8E1-C591-4AF7-A417-7B883A78CF5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
