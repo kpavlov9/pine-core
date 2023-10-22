@@ -26,7 +26,6 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             public byte Byte2;
             [FieldOffset(3)]
             public byte Byte3;
-
             [FieldOffset(0)]
             public int Int;
         }
@@ -380,7 +379,7 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
             : GetUInt(x);
         #endregion
 
-        #region
+        #region UShort-Half Union
         /// <summary>
         /// Returns half corresponding to the bit ordering of ushort.
         /// </summary>
