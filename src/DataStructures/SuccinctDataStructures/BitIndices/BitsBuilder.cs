@@ -176,7 +176,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         => _succintBitsBuilder
             .Reduce(
                 @default: new SuccinctBitsBuilder(this),
-                maybeAfter: out _succintBitsBuilder)
+                monadAfter: out _succintBitsBuilder)
             .Build();
 
     public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
@@ -192,7 +192,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         => _succintCompressedBitsBuilder
             .Reduce(
                 @default: new SuccinctCompressedBitsBuilder(this),
-                maybeAfter: out _succintCompressedBitsBuilder)
+                monadAfter: out _succintCompressedBitsBuilder)
             .Build();
 
     public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)

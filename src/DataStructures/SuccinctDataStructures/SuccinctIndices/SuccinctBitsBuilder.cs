@@ -253,7 +253,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         => _succintCompressedBitsBuilder
             .Reduce(
                 @default: new SuccinctCompressedBitsBuilder(this),
-                maybeAfter: out _succintCompressedBitsBuilder)
+                monadAfter: out _succintCompressedBitsBuilder)
             .Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

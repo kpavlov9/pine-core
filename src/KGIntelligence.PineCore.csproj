@@ -36,6 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\pine-effect\PineEffects.csproj" />
+    <ProjectReference Include="..\..\pine-effects\PineEffects.csproj" />
   </ItemGroup>
 </Project>
