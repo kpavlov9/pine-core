@@ -297,6 +297,12 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
     {
         var bits = _bits.Build();
         int size = (int)bits.Size;
+
+        if(size == 0)
+        {
+            return default;
+        }
+
         var blocksCount = GetBlocksCount();
 
         InitializeBuilders(
