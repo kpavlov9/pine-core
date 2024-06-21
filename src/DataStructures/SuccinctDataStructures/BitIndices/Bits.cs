@@ -16,14 +16,14 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndic
 public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
 {
     private readonly ImmutableArray<nuint> _data;
-    private readonly nuint _position;
-    public nuint Size => _position;
+    private readonly nuint _size;
+    public nuint Size => _size;
 
     public IEnumerable<nuint> Data => _data;
 
-    public Bits(nuint position, ImmutableArray<nuint> data)
+    public Bits(nuint size, ImmutableArray<nuint> data)
     {
-        _position = position;
+        _size = size;
         _data = data;
     }
 
@@ -128,10 +128,10 @@ public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
 
     public void Write(BinaryWriter writer)
     {
-        writer.WriteNUInt(_position);
+        writer.WriteNUInt(_size);
 
         var size =
-            (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+            (int)((_size + NativeBitCountMinusOne) / NativeBitCount);
         
         writer.Write(size);
 
@@ -209,9 +209,9 @@ public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
         var bits = (Bits)obj;
 
         var validDataRange =
-            (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+            (int)((_size + NativeBitCountMinusOne) / NativeBitCount);
 
-        return bits._position == _position &&
+        return bits._size == _size &&
                 bits._data
                     .Take(validDataRange)
                     .SequenceEqual(_data.Take(validDataRange));

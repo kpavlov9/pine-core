@@ -38,6 +38,18 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         _setBitsCount = 0;
     }
 
+    private SuccinctBitsBuilder(
+        List<nuint> values,
+        List<nuint> ranks,
+        nuint size,
+        nuint setBitsCount)
+    {
+        _values = values;
+        _ranks = ranks;
+        _size = size;
+        _setBitsCount = setBitsCount;
+    }
+
     public SuccinctBitsBuilder(IBits bits)
     {
         _values = new List<nuint>();
@@ -270,4 +282,10 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         ClearAndInitialize(bits);
         return BuildSuccinctCompressedIndices();
     }
+
+    public IBitsBuilder Clone() => new SuccinctBitsBuilder(
+        values: _values.ToList(),
+        ranks: _ranks.ToList(),
+        size: _size,
+        setBitsCount: _setBitsCount);
 }

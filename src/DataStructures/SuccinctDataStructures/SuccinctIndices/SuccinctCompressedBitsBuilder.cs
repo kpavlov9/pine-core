@@ -97,6 +97,11 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         }
     }
 
+    private SuccinctCompressedBitsBuilder(BitsBuilder bits)
+    {
+        _bits = bits;
+    }
+
     public SuccinctCompressedBitsBuilder()
     {
         _bits = new BitsBuilder(0);
@@ -359,4 +364,6 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         ClearAndInitialize(bits);
         return Build();
     }
+
+    public IBitsBuilder Clone() => new SuccinctCompressedBitsBuilder((BitsBuilder)_bits.Clone());
 }

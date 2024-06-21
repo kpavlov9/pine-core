@@ -45,24 +45,13 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         _data = new List<nuint>();
     }
 
-    public BitsBuilder(IReadOnlyList<nuint> data)
+    public BitsBuilder(IReadOnlyList<nuint> data, nuint bitsSize)
     {
         _data = new();
 
         InitializeFromData(
             inputData: data,
-            inputDataSize: (nuint)(NativeBitCount * data.Count),
-            outputData: _data,
-            outputPosition: out _position);
-    }
-
-    public BitsBuilder(IEnumerable<nuint> data)
-    {
-        _data = new();
-
-        InitializeFromData(
-            inputData: data,
-            inputDataSize: (nuint)(NativeBitCount * data.Count()),
+            inputDataSize: bitsSize,
             outputData: _data,
             outputPosition: out _position);
     }
@@ -365,4 +354,6 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         }
         AddUnsetBits(1);
     }
+
+    public IBitsBuilder Clone() => new BitsBuilder(data: _data.ToList(), bitsSize: _position);
 }
