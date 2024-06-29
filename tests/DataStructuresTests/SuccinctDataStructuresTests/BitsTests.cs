@@ -362,10 +362,10 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void from_ul_list()
+        public void from_values()
         {
             var values = new nuint[] { 1, 1, 1 };
-            var bitsBuilder = new BitsBuilder(values);
+            var bitsBuilder = new BitsBuilder(values, (nuint)values.Length * NativeBitCount);
             var bits = bitsBuilder.Build();
 
             if (Is32BitSystem)
@@ -396,55 +396,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bits.FetchBits(64));
                 Assert.Equal(NUIntOne, bits.FetchBits(128));
             }
-
-            Assert.Equal((nuint)values.Count() * NativeBitCount, bitsBuilder.Size);
-            Assert.Equal(bits.Size, bitsBuilder.Size);
-        }
-
-        [Fact]
-        public void from_ul_enumerable()
-        {
-            IEnumerable<nuint> values = new nuint[] { 1, 1, 1 };
-            var bitsBuilder = new BitsBuilder(values);
-            var bits = bitsBuilder.Build();
-
-            if (Is32BitSystem)
-            {// 32-Bit System:
-                Assert.True(bits.GetBit(31));
-                Assert.True(bits.GetBit(63));
-                Assert.True(bits.GetBit(95));
-
-                Assert.True(bitsBuilder.GetBit(31));
-                Assert.True(bitsBuilder.GetBit(63));
-                Assert.True(bitsBuilder.GetBit(95));
-
-                Assert.Equal(NUIntOne, bits.FetchBits(0));
-                Assert.Equal(NUIntOne, bits.FetchBits(32));
-                Assert.Equal(NUIntOne, bits.FetchBits(64));
-
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(0));
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(32));
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(64));
-            }
-            else
-            {// 64-Bit System:
-                Assert.True(bits.GetBit(63));
-                Assert.True(bits.GetBit(127));
-                Assert.True(bits.GetBit(191));
-
-                Assert.True(bitsBuilder.GetBit(63));
-                Assert.True(bitsBuilder.GetBit(127));
-                Assert.True(bitsBuilder.GetBit(191));
-
-                Assert.Equal(NUIntOne, bits.FetchBits(0));
-                Assert.Equal(NUIntOne, bits.FetchBits(64));
-                Assert.Equal(NUIntOne, bits.FetchBits(128));
-
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(0));
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(64));
-                Assert.Equal(NUIntOne, bitsBuilder.FetchBits(128));
-            }
-
 
             Assert.Equal((nuint)values.Count() * NativeBitCount, bitsBuilder.Size);
             Assert.Equal(bits.Size, bitsBuilder.Size);
