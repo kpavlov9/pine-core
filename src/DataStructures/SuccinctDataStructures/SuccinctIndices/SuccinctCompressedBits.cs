@@ -11,7 +11,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 
 /// <summary>
 /// Compressed bit sequence offering rank and select queries with the need of decopression.
-/// The paper which ispires the implementation is
+/// The paper which inspires the implementation is
 /// "Succinct Indexable Dictionaries with Applications to Encoding k-ary Trees and Multisets"
 /// by Rajeev Raman, V.Raman and S.Srinivasa Rao: http://arxiv.org/pdf/0705.0552.pdf
 ///
