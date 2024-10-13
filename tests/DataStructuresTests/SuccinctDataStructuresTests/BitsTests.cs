@@ -397,7 +397,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 Assert.Equal(NUIntOne, bits.FetchBits(128));
             }
 
-            Assert.Equal((nuint)values.Count() * NativeBitCount, bitsBuilder.Size);
+            Assert.Equal((nuint)values.Length * NativeBitCount, bitsBuilder.Size);
             Assert.Equal(bits.Size, bitsBuilder.Size);
         }
 
