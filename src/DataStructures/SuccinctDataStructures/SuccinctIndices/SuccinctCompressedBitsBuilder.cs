@@ -90,7 +90,7 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         {
             var elementsInTheClass = classCounts[BlockSize][n];
             var bits =
-                (uint)Math.Ceiling(Math.Log(elementsInTheClass + 1, 2));
+                (uint)MathF.Ceiling(MathF.Log(elementsInTheClass + 1, 2));
 
             ClassBitOffsets[n] = bits;
             MaxBitsPerOffset = Math.Max(MaxBitsPerOffset, bits);
