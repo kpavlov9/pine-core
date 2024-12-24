@@ -94,7 +94,7 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
         Write(writer);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
         {

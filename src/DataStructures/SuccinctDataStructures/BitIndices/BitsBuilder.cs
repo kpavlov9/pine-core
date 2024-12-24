@@ -58,7 +58,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
 
     public BitsBuilder(IBits bits)
     {
-        _data = new();
+        _data = [];
         InitializeFromBits(bits);
     }
 
@@ -313,7 +313,7 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(uint bits, int bitsCount)
-        => AddBits((nuint)bits, bitsCount);
+        => AddBits(bits, bitsCount);
 
     public void AddSetBits(int bitsCount)
     {
@@ -355,5 +355,5 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         AddUnsetBits(1);
     }
 
-    public IBitsBuilder Clone() => new BitsBuilder(data: _data.ToList(), bitsSize: _position);
+    public IBitsBuilder Clone() => new BitsBuilder(data: _data, bitsSize: _position);
 }

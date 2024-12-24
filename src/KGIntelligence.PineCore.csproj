@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>KGIntelligence.PineCore</PackageId>
-    <Version>1.2.1</Version>
+    <Version>1.2.3</Version>
     <Title>PineCore: C# swiss-knife-library</Title>
     <Authors>KG Intelligence</Authors>
     <Company>KG Intelligence</Company>

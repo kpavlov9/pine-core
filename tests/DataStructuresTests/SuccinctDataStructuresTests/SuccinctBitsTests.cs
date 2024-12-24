@@ -1,5 +1,4 @@
-﻿using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+﻿using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
@@ -43,14 +42,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         [Fact]
         public void size()
         {
-            Assert.Equal(_values[_values.Count - 1] + 1, _bits1.Size);
+            Assert.Equal(_values[^1] + 1, _bits1.Size);
             Assert.Equal((nuint)_values.Count, _bits1.SetBitsCount);
-            Assert.Equal(_values[_values.Count - 1] + 1, _bits0.Size);
+            Assert.Equal(_values[^1] + 1, _bits0.Size);
             Assert.Equal((nuint)_values.Count, _bits0.UnsetBitsCount);
 
-            Assert.Equal(_values[_values.Count - 1] + 1, _bv1Builder.Size);
+            Assert.Equal(_values[^1] + 1, _bv1Builder.Size);
             Assert.Equal((nuint)_values.Count, _bv1Builder.SetBitsCount);
-            Assert.Equal(_values[_values.Count - 1] + 1, _bv0Builder.Size);
+            Assert.Equal(_values[^1] + 1, _bv0Builder.Size);
             Assert.Equal((nuint)_values.Count, _bv0Builder.UnsetBitsCount);
         }
 
@@ -88,6 +87,31 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             }
         }
 
+
+        [Fact]
+        public void select_bits_simple()
+        {
+            var bits1Builder = new BitsBuilder(87);
+
+            for (nuint i = 0; i < 87; i++)
+            {
+                if(i == 0 || i == 1 || i == 29 || i == 30)
+                {
+                    bits1Builder.Set(i);
+                }
+            }
+
+            var compressedBits1 = new SuccinctBitsBuilder(bits1Builder).Build();
+
+            Assert.Equal((nuint)0, compressedBits1.SelectSetBits(0));
+            Assert.Equal((nuint)1, compressedBits1.SelectSetBits(1));
+
+            Assert.Equal((nuint)29, compressedBits1.SelectSetBits(2));
+            Assert.Equal((nuint)30, compressedBits1.SelectSetBits(3));
+
+            Assert.Equal(bits1Builder.Size, compressedBits1.SelectSetBits(4));
+        }
+
         [Fact]
         public void select()
         {
@@ -105,10 +129,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         public void select_before_build()
         {
             var bv = new SuccinctBits();
-            var bvBuilder = new SuccinctBitsBuilder();
 
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => bv.SelectSetBits(100));
+            Assert.Equal(bv.Size, bv.SelectSetBits(100));
         }
 
         [Fact]
@@ -141,14 +163,14 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         [Fact]
         public void select_boundary()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bits1.SelectSetBits(_bits1.SetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bits1.SelectUnsetBits(_bits1.UnsetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bits0.SelectSetBits(_bits0.SetBitsCount));
-            Assert.Throws<ArgumentOutOfRangeException>(
-                () => _bits0.SelectUnsetBits(_bits0.UnsetBitsCount));
+            Assert.Equal(
+                _bits1.Size, _bits1.SelectSetBits(_bits1.SetBitsCount));
+            Assert.Equal(
+                _bits1.Size, _bits1.SelectUnsetBits(_bits1.UnsetBitsCount));
+            Assert.Equal(
+                 _bits0.Size, _bits0.SelectSetBits(_bits0.SetBitsCount));
+            Assert.Equal(
+                _bits0.Size, _bits0.SelectUnsetBits(_bits0.UnsetBitsCount));
         }
 
         [Fact]

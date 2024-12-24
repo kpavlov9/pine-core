@@ -198,18 +198,15 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
 
     internal static nuint SelectSetBits(
         nuint bitCountCutoff,
-        nuint setBitsCount,
         IReadOnlyList<nuint> ranks,
         IReadOnlyList<nuint> values)
     {
-        ValidateBitCountCutoff(bitCountCutoff, setBitsCount);
-
         int left = 0;
         int right = ranks.Count;
         while (left < right)
         {
             int pivot = left + right >> 1;
-            nuint rank = ranks[pivot];
+            var rank = ranks[pivot];
 
             if (bitCountCutoff < rank)
             {
@@ -243,26 +240,24 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint SelectSetBits(nuint bitCountCutoff)
-        => SelectSetBits(
+        => bitCountCutoff >= SetBitsCount
+            ? _size
+            : SelectSetBits(
             bitCountCutoff: bitCountCutoff,
-            setBitsCount: _setBitsCount,
             ranks: _ranks,
             values: _values);
 
     internal static nuint SelectUnsetBits(
         nuint bitCountCutoff,
-        nuint unsetBitsCount,
         IReadOnlyList<nuint> ranks,
         IReadOnlyList<nuint> values)
     {
-        ValidateBitCountCutoff(bitCountCutoff, unsetBitsCount);
-
         int left = 0;
         int right = ranks.Count;
         while (left < right)
         {
             int pivot = left + right >> 1;
-            nuint rank = ranks[pivot];
+            var rank = ranks[pivot];
             rank = (nuint)(pivot * LargeBlockSize) - rank;
             if (bitCountCutoff < rank)
             {
@@ -293,11 +288,12 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint SelectUnsetBits(nuint bitCountCutoff)
-        => SelectUnsetBits(
-            bitCountCutoff: bitCountCutoff,
-            unsetBitsCount: UnsetBitsCount,
-            ranks: _ranks,
-            values: _values);
+        => bitCountCutoff >= UnsetBitsCount
+            ? _size
+            : SelectUnsetBits(
+                bitCountCutoff: bitCountCutoff,
+                ranks: _ranks,
+                values: _values);
 
     public static SuccinctBits Read(BinaryReader reader)
     {
@@ -366,7 +362,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
         Write(writer);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
         {

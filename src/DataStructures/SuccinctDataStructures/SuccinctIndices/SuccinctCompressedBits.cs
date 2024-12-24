@@ -224,19 +224,16 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     {
         if (bitCountCutoff >= SetBitsCount)
         {
-            throw new ArgumentOutOfRangeException(
-                @$"The argument '{nameof(bitCountCutoff)}' with value '{bitCountCutoff}'
- exceeds the total number of 1s = {SetBitsCount}");
+            return _size;
         }
 
-        var rankSamples = _rankSamples;
         nuint left = 0;
-        nuint right = rankSamples.Size - 1;
+        nuint right = _rankSamples.Size - 1;
 
         while (left < right)
         {
             nuint pivot = left + right >> 1;
-            nuint rankAtThePivot = rankSamples.GetBit(pivot);
+            nuint rankAtThePivot = _rankSamples.GetBit(pivot);
             if (bitCountCutoff < rankAtThePivot)
             {
                 right = pivot;
@@ -246,22 +243,29 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
                 left = pivot + 1;
             }
         }
-        right--;
+        if (right != 0)
+        {
+            right--;
+        }
 
-        nuint blockPosition = right * SuperBlockFactor;
+        var blockPosition = right * SuperBlockFactor;
         var blockSize = BlockSize;
 
-        var rank = rankSamples.GetBit(right);
-        nuint delta = rankSamples.GetBit(right + 1) - rank;
+        var rank = _rankSamples.GetBit(right);
 
-        if (delta == SuperBlockSize)
+        if (right > _rankSamples.Size)
         {
-            // The bits in the left super-block are 1.
-            return blockPosition * blockSize + (bitCountCutoff - rank);
+            var delta = _rankSamples.GetBit(right + 1) - rank;
+
+            if (delta == SuperBlockSize)
+            {
+                // The bits in the left super-block are 1.
+                return blockPosition * blockSize + (bitCountCutoff - rank);
+            }          
         }
 
         nuint blocksCount = (_size + blockSize - 1) / blockSize;
-        nuint intialI = bitCountCutoff;
+        var intialI = bitCountCutoff;
         bitCountCutoff -= rank;
 
         while (true)
@@ -289,9 +293,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     {
         if (position >= UnsetBitsCount)
         {
-            throw new ArgumentOutOfRangeException(
-                @$"The zero bit position of '{position}'
- exceeds the total count of zeros - '{UnsetBitsCount}'.");
+            return _size;
         }
 
         var superBlockSize = SuperBlockSize;
@@ -386,7 +388,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         Write(writer);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
         {

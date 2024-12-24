@@ -388,6 +388,30 @@ public class SuccinctCompressedBitsTests
         }
     }
 
+   [Fact]
+    public void select_bits_simple()
+    {
+        var bits1Builder = new BitsBuilder(87);
+
+        for (nuint i = 0; i < 87; i++)
+        {
+            if(i == 0 || i == 1 || i == 29 || i == 30)
+            {
+                bits1Builder.Set(i);
+            }
+        }
+
+        var compressedBits1 = new SuccinctCompressedBitsBuilder(bits1Builder).Build();
+
+        Assert.Equal((nuint)0, compressedBits1.SelectSetBits(0));
+        Assert.Equal((nuint)1, compressedBits1.SelectSetBits(1));
+
+        Assert.Equal((nuint)29, compressedBits1.SelectSetBits(2));
+        Assert.Equal((nuint)30, compressedBits1.SelectSetBits(3));
+
+        Assert.Equal(bits1Builder.Size, compressedBits1.SelectSetBits(4));
+    }
+
     [Fact]
     public void select_bits()
     {
@@ -407,10 +431,7 @@ public class SuccinctCompressedBitsTests
         var bits1Builder = new BitsBuilder(values.Max());
         var bits0Builder = new BitsBuilder(values.Max());
 
-        for (nuint i = 0; i <= values[values.Count - 1]; i++)
-        {
-            bits0Builder.Set(i);
-        }
+        bits0Builder.AddSetBits((int)values[^1]+1);
 
         foreach (nuint i in values)
         {

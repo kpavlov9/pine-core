@@ -50,6 +50,41 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         _setBitsCount = setBitsCount;
     }
 
+     public void PushZeroes(int bitsCount)
+     {
+        if(bitsCount > 0)
+        {
+            Unset((nuint)bitsCount - 1);
+            return;
+        }
+        
+        throw new ArgumentException(
+            "The bits count should be great than zero.",
+            nameof(bitsCount));
+     }
+
+    public void PushOnes(int bitsCount)
+    {
+        var i = 0;
+
+        do
+        {
+            Set(_size);
+        }
+        while(i++ < bitsCount);
+    }
+
+    public void Add(bool bitValue)
+    {
+        if(bitValue)
+        {
+            Set(_size);
+            return;
+        }
+
+        Unset(_size);
+    }
+
     public SuccinctBitsBuilder(IBits bits)
     {
         _values = new List<nuint>();
@@ -201,7 +236,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
             _setBitsCount++;
         }
 
-        _values[qSmall] = _values[qSmall] | mask;
+        _values[qSmall] = newValue;
     }
 
     public void Unset(nuint position)

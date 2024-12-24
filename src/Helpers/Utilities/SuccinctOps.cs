@@ -46,17 +46,6 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
                 );
             }
         }
-
-        internal static void ValidateBitCountCutoff(nuint bitCountCutoff, nuint bitsCount)
-        {
-            if (bitCountCutoff >= bitsCount)
-            {
-                throw new ArgumentOutOfRangeException(
-                    @$"The argument '{nameof(bitCountCutoff)}' with value '{bitCountCutoff}' exceeds
- the vector length {bitsCount}."
-                );
-            }
-        }
     }
 }
 
