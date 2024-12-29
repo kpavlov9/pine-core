@@ -6,7 +6,6 @@ using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using PineEffects.src.Monads.MaybeMonad;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
@@ -28,7 +27,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     public nuint SetBitsCount => _setBitsCount;
     public nuint UnsetBitsCount => _size - _setBitsCount;
 
-    private Maybe<SuccinctCompressedBitsBuilder> _succintCompressedBitsBuilder;
+    private SuccinctCompressedBitsBuilder? _succintCompressedBitsBuilder;
 
     public SuccinctBitsBuilder()
     {
@@ -295,13 +294,12 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISuccinctIndices BuildSuccinctBits() => Build();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
-        => _succintCompressedBitsBuilder
-            .Reduce(
-                @default: new SuccinctCompressedBitsBuilder(this),
-                monadAfter: out _succintCompressedBitsBuilder)
-            .Build();
+    {
+        _succintCompressedBitsBuilder ??= new SuccinctCompressedBitsBuilder(this);
+
+        return _succintCompressedBitsBuilder.Build();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode() => Bits.GetHashCode(values: _values);

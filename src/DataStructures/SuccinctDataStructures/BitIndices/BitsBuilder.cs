@@ -11,7 +11,6 @@ using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitsBuilderHelper;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
-using PineEffects.src.Monads.MaybeMonad;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
 
@@ -29,8 +28,8 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
 
     public IEnumerable<nuint> Data => _data;
 
-    private Maybe<SuccinctBitsBuilder> _succintBitsBuilder;
-    private Maybe<SuccinctCompressedBitsBuilder> _succintCompressedBitsBuilder;
+    private SuccinctBitsBuilder? _succintBitsBuilder;
+    private SuccinctCompressedBitsBuilder? _succintCompressedBitsBuilder;
 
     private static nuint GetCapacity(nuint initialCapacity) =>
         (initialCapacity + NativeBitCountMinusOne) / NativeBitCount;
@@ -160,13 +159,12 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         return Build();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISuccinctIndices BuildSuccinctBits()
-        => _succintBitsBuilder
-            .Reduce(
-                @default: new SuccinctBitsBuilder(this),
-                monadAfter: out _succintBitsBuilder)
-            .Build();
+    {
+        _succintBitsBuilder ??= new SuccinctBitsBuilder(this);
+
+        return _succintBitsBuilder.Build();
+    }
 
     public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
     {
@@ -176,13 +174,11 @@ public sealed class BitsBuilder : IBits, IBitIndices, IBitsBuilder
         return BuildSuccinctBits();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
-        => _succintCompressedBitsBuilder
-            .Reduce(
-                @default: new SuccinctCompressedBitsBuilder(this),
-                monadAfter: out _succintCompressedBitsBuilder)
-            .Build();
+    {
+        _succintCompressedBitsBuilder ??= new SuccinctCompressedBitsBuilder(this);
+        return _succintCompressedBitsBuilder.Build();
+    }
 
     public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
     {

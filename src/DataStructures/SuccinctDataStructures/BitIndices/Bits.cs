@@ -199,7 +199,7 @@ public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
         return Read(reader);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
         {
