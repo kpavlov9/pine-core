@@ -5,15 +5,13 @@ using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 /// <summary>
 /// Builds the bits sequence <see cref="SuccinctBits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
+public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
 {
     private readonly List<nuint> _values;
     private readonly List<nuint> _ranks;
@@ -84,7 +82,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         Unset(_size);
     }
 
-    public SuccinctBitsBuilder(IBits bits)
+    public SuccinctBitsBuilder(IBitsContainer bits)
     {
         _values = new List<nuint>();
         _ranks = new List<nuint>();
@@ -113,7 +111,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     }
 
     private SuccinctBits InitializeFromBits(
-        IBits bits)
+        IBitsContainer bits)
     {
         _values.Clear();
         _ranks.Clear();
@@ -164,7 +162,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     }
 
     private static void ConstructFromBits(
-        IBits bits,
+        IBitsContainer bits,
         List<nuint> values,
         out nuint size)
     {
@@ -184,7 +182,7 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
         _setBitsCount = 0;
     }
 
-    public SuccinctBits ClearAndInitialize(IBits bits)
+    public SuccinctBits ClearAndInitialize(IBitsContainer bits)
     {
         Clear();
         return InitializeFromBits(bits: bits);
@@ -289,12 +287,12 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IBitIndices BuildBitIndices() => Build();
+    public IBits BuildBits() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ISuccinctIndices BuildSuccinctBits() => Build();
+    public ISuccinctBits BuildSuccinctBits() => Build();
 
-    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices()
+    public ISuccinctCompressedBits BuildSuccinctCompressedBits()
     {
         _succintCompressedBitsBuilder ??= new SuccinctCompressedBitsBuilder(this);
 
@@ -302,18 +300,18 @@ public sealed class SuccinctBitsBuilder: IBits, IBitsBuilder, IBitIndices
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override int GetHashCode() => Bits.GetHashCode(values: _values);
+    public override int GetHashCode() => Bits.Bits.GetHashCode(values: _values);
 
-    public IBitIndices ClearAndBuildBitIndices(IBits bits)
+    public IBits ClearAndBuildBits(IBitsContainer bits)
         => ClearAndInitialize(bits);
 
-    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
+    public ISuccinctBits ClearAndBuildSuccinctBits(IBitsContainer bits)
         => ClearAndInitialize(bits);
 
-    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
+    public ISuccinctCompressedBits ClearAndBuildSuccinctCompressedBits(IBitsContainer bits)
     {
         ClearAndInitialize(bits);
-        return BuildSuccinctCompressedIndices();
+        return BuildSuccinctCompressedBits();
     }
 
     public IBitsBuilder Clone() => new SuccinctBitsBuilder(

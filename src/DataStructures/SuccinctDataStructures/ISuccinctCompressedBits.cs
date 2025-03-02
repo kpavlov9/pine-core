@@ -1,5 +1,5 @@
 ﻿namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures;
 
-public interface ISuccinctCompressedIndices : ISuccinctIndices
+public interface ISuccinctCompressedBits : ISuccinctBits
 {
 }

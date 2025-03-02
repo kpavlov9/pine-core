@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
 namespace KGIntelligence.PineCore.Helpers.Utilities
 {

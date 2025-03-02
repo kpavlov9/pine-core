@@ -7,17 +7,17 @@ public interface IBitsBuilder
 
     public nuint Size { get; }
 
-    public IBitIndices BuildBitIndices();
-    public ISuccinctIndices BuildSuccinctBits();
+    public IBits BuildBits();
+    public ISuccinctBits BuildSuccinctBits();
 
-    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices();
+    public ISuccinctCompressedBits BuildSuccinctCompressedBits();
 
     public void Clear();
 
-    public IBitIndices ClearAndBuildBitIndices(IBits bits);
-    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits);
+    public IBits ClearAndBuildBits(IBitsContainer bits);
+    public ISuccinctBits ClearAndBuildSuccinctBits(IBitsContainer bits);
 
-    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits);
+    public ISuccinctCompressedBits ClearAndBuildSuccinctCompressedBits(IBitsContainer bits);
 
     public IBitsBuilder Clone();
 }

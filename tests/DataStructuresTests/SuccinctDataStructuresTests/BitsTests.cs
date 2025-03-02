@@ -1,7 +1,7 @@
 ﻿using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 {
@@ -33,7 +33,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             bitsBuilder.Set(65);
 
-            var bitIndices = bitsBuilder.ClearAndBuildBitIndices(bits);
+            var bitIndices = bitsBuilder.ClearAndBuildBits(bits);
 
             Assert.True(bitIndices.GetBit(64));
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
@@ -43,7 +43,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 
@@ -64,7 +64,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             bitsBuilder.Set(65);
 
-            var bitIndices = bitsBuilder.ClearAndBuildBitIndices(bits);
+            var bitIndices = bitsBuilder.ClearAndBuildBits(bits);
 
             Assert.True(bitIndices.GetBit(64));
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
@@ -74,7 +74,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 
@@ -97,7 +97,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
             bitsBuilder.Set(65);
 
-            var bitIndices = compressedBitsBuilder.ClearAndBuildBitIndices(bits);
+            var bitIndices = compressedBitsBuilder.ClearAndBuildBits(bits);
 
             Assert.True(bitIndices.GetBit(64));
             Assert.Equal(bitIndices.Size, compressedBitsBuilder.Size);
@@ -107,7 +107,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 
@@ -123,7 +123,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bitsBuilder = new BitsBuilder(128);
             bitsBuilder.Set(64);
 
-            var bitIndices = bitsBuilder.BuildBitIndices();
+            var bitIndices = bitsBuilder.BuildBits();
 
             Assert.True(bitIndices.GetBit(64));
 
@@ -132,7 +132,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 
@@ -149,7 +149,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bitsBuilder = new SuccinctBitsBuilder(128);
             bitsBuilder.Set(64);
 
-            var bitIndices = bitsBuilder.BuildBitIndices();
+            var bitIndices = bitsBuilder.BuildBits();
 
             Assert.True(bitIndices.GetBit(64));
 
@@ -158,7 +158,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 
@@ -174,7 +174,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             var bitsBuilder = new SuccinctCompressedBitsBuilder(128);
             bitsBuilder.Set(64);
 
-            var bitIndices = bitsBuilder.BuildBitIndices();
+            var bitIndices = bitsBuilder.BuildBits();
 
             Assert.True(bitIndices.GetBit(64));
 
@@ -183,7 +183,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 bitsBuilder.Set(i);
             }
 
-            bitIndices = bitsBuilder.BuildBitIndices();
+            bitIndices = bitsBuilder.BuildBits();
 
             Assert.Equal(bitIndices.Size, bitsBuilder.Size);
 

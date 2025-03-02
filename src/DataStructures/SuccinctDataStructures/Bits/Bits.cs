@@ -7,13 +7,13 @@ using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.IONativeBitHelper;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
 
 /// <summary>
 /// An implementation of a plain bit sequence.
 /// </summary>
-public readonly struct Bits : IBits, IBitIndices, ISerializableBits<Bits>
+public readonly struct Bits : IBitsContainer, IBits, ISerializableBits<Bits>
 {
     private readonly ImmutableArray<nuint> _data;
     private readonly nuint _size;

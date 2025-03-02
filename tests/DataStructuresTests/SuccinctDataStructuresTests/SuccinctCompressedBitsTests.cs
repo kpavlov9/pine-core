@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
-
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests;
 
@@ -93,7 +92,7 @@ public class SuccinctCompressedBitsTests
             }
         }
 
-        var bits = bitsBuilder.BuildSuccinctCompressedIndices();
+        var bits = bitsBuilder.BuildSuccinctCompressedBits();
 
         Assert.Equal(bits.Size, bitsBuilder.Size);
         Assert.Equal(bits.UnsetBitsCount, bitsBuilder.UnsetBitsCount);
@@ -154,7 +153,7 @@ public class SuccinctCompressedBitsTests
             }
         }
 
-        var bits = bitsBuilder.BuildSuccinctCompressedIndices();
+        var bits = bitsBuilder.BuildSuccinctCompressedBits();
 
         Assert.Equal(bits.Size, bitsBuilder.Size);
         Assert.Equal(bits.UnsetBitsCount, succinctBuilder.UnsetBitsCount);
@@ -215,7 +214,7 @@ public class SuccinctCompressedBitsTests
             }
         }
 
-        var bits = bitsBuilder.BuildSuccinctCompressedIndices();
+        var bits = bitsBuilder.BuildSuccinctCompressedBits();
 
         Assert.Equal(bits.Size, bitsBuilder.Size);
         Assert.Equal(bitsLength, bits.Size);

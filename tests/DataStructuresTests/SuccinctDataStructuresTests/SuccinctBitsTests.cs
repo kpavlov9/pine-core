@@ -1,5 +1,7 @@
-﻿using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+﻿
+
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 {
@@ -294,8 +296,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             bitsBuilder0.Unset(1);
             bitsBuilder1.Set(1);
 
-            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
-            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctBits(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctBits(_bits1);
 
             Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
             Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);
@@ -339,8 +341,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             bitsBuilder0.Unset(1);
             bitsBuilder1.Set(1);
 
-            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
-            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctBits(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctBits(_bits1);
 
             Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
             Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);
@@ -384,8 +386,8 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             bitsBuilder0.Unset(1);
             bitsBuilder1.Set(1);
 
-            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctIndices(_bits0);
-            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctIndices(_bits1);
+            var succinctIndices0 = bitsBuilder0.ClearAndBuildSuccinctBits(_bits0);
+            var succinctIndices1 = bitsBuilder1.ClearAndBuildSuccinctBits(_bits1);
 
             Assert.Equal(succinctIndices0.Size, bitsBuilder0.Size);
             Assert.Equal(succinctIndices1.Size, bitsBuilder1.Size);

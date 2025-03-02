@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Immutable;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace KGIntelligence.PineCore.Helpers.Utilities
@@ -16,6 +17,21 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
 
         public const byte IntBitSizeMinusOne = 31;
         public const byte LongBitSizeMinusOne = 63;
+        private const int BitReverseTableLength = 256;
+        private static readonly ImmutableArray<byte> BitReverseTable;
+
+        static BitOps()
+        {
+
+            Span<byte> bitReverseTable = stackalloc byte[BitReverseTableLength];
+            // Precompute the bit-reversal table for 8 bits
+            for (ulong i = 0; i < BitReverseTableLength; i++)
+            {
+                bitReverseTable[(int)i] = (byte)((i * 0x0202020202UL & 0x010884422010UL) % 1023);
+            }
+
+            BitReverseTable = ImmutableArray.Create(bitReverseTable);
+        }
 
         /// <summary>
         /// Returns the population count (count of set bits) of a mask.
@@ -36,60 +52,45 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         /// <summary>
         /// Returns a value with the reversed bit representation of the input value.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ReverseBits(byte value)
-            => (byte)(((value * 0x80200802ul) & 0x0884422110ul) * 0x0101010101ul >> 32);
+            => BitReverseTable[value];
 
         /// <summary>
         /// Returns a value with the reversed bit representation of the input value.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ReverseBits(ushort value)
-        {
-            uint valueUI = value;
-            valueUI = ((valueUI >> 1) & 0x5555) | ((valueUI & 0x5555) << 1);
-            valueUI = ((valueUI >> 2) & 0x3333) | ((valueUI & 0x3333) << 2);
-            valueUI = ((valueUI >> 4) & 0x0F0F) | ((valueUI & 0x0F0F) << 4);
-            valueUI = ((valueUI >> 8) & 0x00FF) | ((valueUI & 0x00FF) << 8);
-
-            return (ushort)valueUI;
-        }
+            => (ushort)(
+                (BitReverseTable[value & 0xFF] << 8) | // Reverse lower byte and shift
+                (BitReverseTable[(value >> 8) & 0xFF]) // Reverse upper byte
+            );
 
         /// <summary>
         /// Returns a value with the reversed bit representation of the input value.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReverseBits(uint value)
-        {
-            value = (value & 0xaaaaaaaa) >> 1 | (value & 0x55555555) << 1;
-            value = (value & 0xcccccccc) >> 2 | (value & 0x33333333) << 2;
-            value = (value & 0xf0f0f0f0) >> 4 | (value & 0x0f0f0f0f) << 4;
-            value = (value & 0xff00ff00) >> 8 | (value & 0x00ff00ff) << 8;
-            return value >> 16 | value << 16;
-        }
+            => (uint)(
+                    (BitReverseTable[(int)value & 0xFF] << 24) |
+                    (BitReverseTable[(int)(value >> 8) & 0xFF] << 16) |
+                    (BitReverseTable[(int)(value >> 16) & 0xFF] << 8) |
+                    (BitReverseTable[(int)(value >> 24) & 0xFF])
+                );
 
         /// <summary>
         /// Returns a value with the reversed bit representation of the input value.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong ReverseBits(ulong value)
-        {
-            const ulong m0 = 0x5555555555555555UL;
-            const ulong m1 = 0x0300c0303030c303UL;
-            const ulong m2 = 0x00c0300c03f0003fUL;
-            const ulong m3 = 0x00000ffc00003fffUL;
-            value = value >> 1 & m0 | (value & m0) << 1;
-
-
-            ulong q = (value >> 4 ^ value) & m1;
-            value = value ^ q ^ q << 4;
-            //Swap
-            q = (value >> 8 ^ value) & m2;
-            value = value ^ q ^ q << 8;
-            //Swap
-            q = (value >> 20 ^ value) & m3;
-            value = value ^ q ^ q << 20;
-
-            return value >> 34 | value << 30;
-        }
+            => ((ulong)BitReverseTable[(int)value & 0xFF] << 56) |
+            ((ulong)BitReverseTable[(int)(value >> 8) & 0xFF] << 48) |
+            ((ulong)BitReverseTable[(int)(value >> 16) & 0xFF] << 40) |
+            ((ulong)BitReverseTable[(int)(value >> 24) & 0xFF] << 32) |
+            ((ulong)BitReverseTable[(int)(value >> 32) & 0xFF] << 24) |
+            ((ulong)BitReverseTable[(int)(value >> 40) & 0xFF] << 16) |
+            ((ulong)BitReverseTable[(int)(value >> 48) & 0xFF] << 8) |
+            BitReverseTable[(int)(value >> 56) & 0xFF];
 
         /// <summary>
         /// Returns the count of set or unset bits up to the given position

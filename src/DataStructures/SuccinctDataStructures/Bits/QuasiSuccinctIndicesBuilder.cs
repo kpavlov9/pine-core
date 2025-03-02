@@ -1,12 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
 /// <summary>
-///  Builds the bits sequence <see cref="QuasiSuccinctBits"/>
+///  Builds the bits sequence <see cref="QuasiSuccinctIndices"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
 public sealed class QuasiSuccinctBitsBuilder
@@ -41,7 +41,7 @@ public sealed class QuasiSuccinctBitsBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public QuasiSuccinctBitsBuilder AddBits(nuint value)
+    public QuasiSuccinctBitsBuilder Add(nuint value)
     {
         if (_position >= _maxLength)
         {
@@ -73,7 +73,7 @@ public sealed class QuasiSuccinctBitsBuilder
         return this;
     }
 
-    public QuasiSuccinctBits Build()
+    public QuasiSuccinctIndices Build()
         => new (
             size: _position,
             lowBitsCount: _lowBitsCount,

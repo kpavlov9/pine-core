@@ -7,5 +7,10 @@ public interface IBits
     /// </summary>
     public nuint Size { get; }
 
-    IEnumerable<nuint> Data { get;  }
+    /// <summary>
+    /// Get the boolean value of the bit the the giver index.
+    /// If the value is '<see cref="true"/>' the bit is 1 if the value is
+    /// '<see cref="false"/>' the bit is 0.
+    /// </summary>
+    bool GetBit(nuint index);
 }

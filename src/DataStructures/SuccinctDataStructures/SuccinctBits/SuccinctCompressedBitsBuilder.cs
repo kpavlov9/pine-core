@@ -1,17 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 /// <summary>
 /// Builds the bits sequence <see cref="SuccinctCompressedBits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
+public sealed class SuccinctCompressedBitsBuilder: IBits, IBitsBuilder
 {
     public nuint Size => _bits.Size;
 
@@ -107,7 +107,7 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         _bits = new BitsBuilder(0);
     }
 
-    public SuccinctCompressedBitsBuilder(IBits bits)
+    public SuccinctCompressedBitsBuilder(IBitsContainer bits)
     {
         _bits = new BitsBuilder(bits);
     }
@@ -129,7 +129,7 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
 
     public void Clear() => _bits.Clear();
 
-    public void ClearAndInitialize(IBits bits)
+    public void ClearAndInitialize(IBitsContainer bits)
         => _bits.ClearAndInitialize(bits);
 
     public void PushZeroes(int bitsCount)
@@ -190,7 +190,7 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
 
     private static void SplitIntoBlocks(
         nuint blocksCount,
-        in Bits bits,
+        in Bits.Bits bits,
         BitsBuilder classValuesBuilder,
         BitsBuilder offsetValuesBuilder,
         QuasiSuccinctBitsBuilder rankSamplesBuilder,
@@ -203,8 +203,8 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
         {
             if (i % SuperBlockFactor == 0)
             {// AddBits a super-block summary for each SuperblockFactor block:
-                offsetPositionSamplesBuilder.AddBits(offsetValuesBuilder.Size);
-                rankSamplesBuilder.AddBits(rankSum);
+                offsetPositionSamplesBuilder.Add(offsetValuesBuilder.Size);
+                rankSamplesBuilder.Add(rankSum);
             }
 
             // Encode each block as a pair:
@@ -222,10 +222,10 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
 
     private static void CheckEncoding(
         nuint blocksCount,
-        in Bits bits,
-        in Bits offsetValues,
-        in Bits classValues,
-        in QuasiSuccinctBits offsetPositionSamples)
+        in Bits.Bits bits,
+        in Bits.Bits offsetValues,
+        in Bits.Bits classValues,
+        in QuasiSuccinctIndices offsetPositionSamples)
     {
         for (nuint i = 0; i < blocksCount; i++)
         {
@@ -269,7 +269,7 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
     }
     private static SuccinctCompressedBits BuildSuccinctBits(
         int size,
-        in Bits bits,
+        in Bits.Bits bits,
         nuint blocksCount,
         BitsBuilder classValuesBuilder,
         BitsBuilder offsetValuesBuilder,
@@ -339,27 +339,27 @@ public sealed class SuccinctCompressedBitsBuilder: IBitIndices, IBitsBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IBitIndices BuildBitIndices() => Build();
+    public IBits BuildBits() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ISuccinctIndices BuildSuccinctBits() => Build();
+    public ISuccinctBits BuildSuccinctBits() => Build();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ISuccinctCompressedIndices BuildSuccinctCompressedIndices() => Build();
+    public ISuccinctCompressedBits BuildSuccinctCompressedBits() => Build();
 
-    public IBitIndices ClearAndBuildBitIndices(IBits bits)
+    public IBits ClearAndBuildBits(IBitsContainer bits)
     {
         ClearAndInitialize(bits);
         return Build();
     }
 
-    public ISuccinctIndices ClearAndBuildSuccinctIndices(IBits bits)
+    public ISuccinctBits ClearAndBuildSuccinctBits(IBitsContainer bits)
     {
         ClearAndInitialize(bits);
         return Build();
     }
 
-    public ISuccinctCompressedIndices ClearAndBuildSuccinctCompressedIndices(IBits bits)
+    public ISuccinctCompressedBits ClearAndBuildSuccinctCompressedBits(IBitsContainer bits)
     {
         ClearAndInitialize(bits);
         return Build();

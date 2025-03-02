@@ -5,16 +5,16 @@ using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices.Bits;
+using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits.Bits;
 
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 /// <summary>
 /// Not compressed bit sequence offering rank and select queries.
 /// </summary>
-public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, ISuccinctIndices
+public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<SuccinctBits>, ISuccinctBits
 {
     private readonly ImmutableArray<nuint> _values;
     private readonly ImmutableArray<nuint> _ranks;
@@ -376,7 +376,7 @@ public readonly struct SuccinctBits : IBits, ISerializableBits<SuccinctBits>, IS
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override int GetHashCode() => Bits.GetHashCode(values: _values);
+    public override int GetHashCode() => Bits.Bits.GetHashCode(values: _values);
 
     public static bool operator ==(SuccinctBits left, SuccinctBits right)
         => left.Equals(right);

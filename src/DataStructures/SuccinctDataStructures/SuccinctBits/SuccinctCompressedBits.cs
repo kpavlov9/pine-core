@@ -3,10 +3,10 @@ using System.Runtime.CompilerServices;
 
 using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices.SuccinctCompressedBitsBuilder;
+using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
+using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits.SuccinctCompressedBitsBuilder;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 
 /// <summary>
@@ -17,10 +17,10 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 ///
 /// The abbreviation 'RRR' comes from the first letters of the familiy names of 3 authors of the paper.
 /// </summary>
-public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompressedBits>, ISuccinctCompressedIndices
+public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompressedBits>, ISuccinctCompressedBits
 {
-    private readonly Bits _classValues;
-    private readonly Bits _offsetValues;
+    private readonly Bits.Bits _classValues;
+    private readonly Bits.Bits _offsetValues;
 
     /// <summary>
     /// The length of the sequence.
@@ -32,8 +32,8 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     /// </summary>
     private readonly nuint _setBitsCount;
 
-    private readonly QuasiSuccinctBits _rankSamples;
-    private readonly QuasiSuccinctBits _offsetPositionSamples;
+    private readonly QuasiSuccinctIndices _rankSamples;
+    private readonly QuasiSuccinctIndices _offsetPositionSamples;
 
     public nuint Size => _size;
 
@@ -44,10 +44,10 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     public SuccinctCompressedBits(
         nuint size,
         nuint setBitsCount,
-        in QuasiSuccinctBits rankSamples,
-        in QuasiSuccinctBits offsetPositionSamples,
-        in Bits classValues,
-        in Bits offsetValues)
+        in QuasiSuccinctIndices rankSamples,
+        in QuasiSuccinctIndices offsetPositionSamples,
+        in Bits.Bits classValues,
+        in Bits.Bits offsetValues)
     {
         _rankSamples = rankSamples;
         _offsetPositionSamples = offsetPositionSamples;
@@ -87,9 +87,9 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     internal static nuint FetchBlock(
         nuint blockPosition,
         uint @class,
-        in QuasiSuccinctBits offsetPosSamples,
-        in Bits offsetValues,
-        in Bits classValues) => InverseOffsetOf(
+        in QuasiSuccinctIndices offsetPosSamples,
+        in Bits.Bits offsetValues,
+        in Bits.Bits classValues) => InverseOffsetOf(
             OffsetOfBlock(
                 blockPosition,
                 @class,
@@ -113,14 +113,14 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     internal static nuint OffsetOfBlock(
         nuint blockPosition,
         uint @class,
-        in QuasiSuccinctBits offsetPosSamples,
-        in Bits offsetValues,
-        in Bits classValues)
+        in QuasiSuccinctIndices offsetPosSamples,
+        in Bits.Bits offsetValues,
+        in Bits.Bits classValues)
     {
         var offsetCount = (int)ClassBitOffsets[@class];
 
         var superBlockIndex = blockPosition / SuperBlockFactor;
-        var offsetPosition = offsetPosSamples.GetBit(superBlockIndex);
+        var offsetPosition = offsetPosSamples.Get(superBlockIndex);
         var j = superBlockIndex * SuperBlockFactor;
 
         while (j < blockPosition)
@@ -165,7 +165,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static uint ClassOfBlock(nuint blockPosition, in Bits classValues)
+    internal static uint ClassOfBlock(nuint blockPosition, in Bits.Bits classValues)
     {
         var bitsPerClass = BitsPerClass;
         return unchecked((uint)classValues.FetchBits(
@@ -184,11 +184,11 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         var superBlockSize = SuperBlockSize;
 
         nuint superBlockIndex = blockIndex / superBlockFactor;
-        nuint rank = _rankSamples.GetBit(superBlockIndex);
+        nuint rank = _rankSamples.Get(superBlockIndex);
         if (superBlockIndex + 1 < _rankSamples.Size)
         {
             // FetchBits the next sample.
-            nuint rankNext = _rankSamples.GetBit(superBlockIndex + 1);
+            nuint rankNext = _rankSamples.Get(superBlockIndex + 1);
             nuint delta = rankNext - rank;
             if (delta == 0)
             {
@@ -233,7 +233,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         while (left < right)
         {
             nuint pivot = left + right >> 1;
-            nuint rankAtThePivot = _rankSamples.GetBit(pivot);
+            nuint rankAtThePivot = _rankSamples.Get(pivot);
             if (bitCountCutoff < rankAtThePivot)
             {
                 right = pivot;
@@ -251,11 +251,11 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         var blockPosition = right * SuperBlockFactor;
         var blockSize = BlockSize;
 
-        var rank = _rankSamples.GetBit(right);
+        var rank = _rankSamples.Get(right);
 
         if (right > _rankSamples.Size)
         {
-            var delta = _rankSamples.GetBit(right + 1) - rank;
+            var delta = _rankSamples.Get(right + 1) - rank;
 
             if (delta == SuperBlockSize)
             {
@@ -305,7 +305,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         {
             nuint pivot = left + right >> 1;
             nuint rankAtThePivot =
-                pivot * superBlockSize - _rankSamples.GetBit(pivot);
+                pivot * superBlockSize - _rankSamples.Get(pivot);
 
             if (position < rankAtThePivot)
             {
@@ -319,8 +319,8 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         right--;
 
         nuint j = right * SuperBlockFactor;
-        nuint rank = _rankSamples.GetBit(right);
-        nuint delta = _rankSamples.GetBit(right + 1) - rank;
+        nuint rank = _rankSamples.Get(right);
+        nuint delta = _rankSamples.Get(right + 1) - rank;
 
         if (delta == 0)
         {
@@ -349,10 +349,10 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         var size = reader.ReadNUInt();
         var setBitsCount = reader.ReadNUInt();
 
-        var classValues = Bits.Read(reader);
-        var offsetValues = Bits.Read(reader);
-        var rankSamples = QuasiSuccinctBits.Read(reader);
-        var offsetPosSamples = QuasiSuccinctBits.Read(reader);
+        var classValues = Bits.Bits.Read(reader);
+        var offsetValues = Bits.Bits.Read(reader);
+        var rankSamples = QuasiSuccinctIndices.Read(reader);
+        var offsetPosSamples = QuasiSuccinctIndices.Read(reader);
 
         return new SuccinctCompressedBits(
             size: size,

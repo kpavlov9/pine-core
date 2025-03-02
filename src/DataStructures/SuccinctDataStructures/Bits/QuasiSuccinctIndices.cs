@@ -1,28 +1,28 @@
 ﻿using KGIntelligence.PineCore.Helpers.Utilities;
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctIndices;
+using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 
-namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.BitIndices;
+namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 
 /// <summary>
 /// Elias-Fano-encoded bits sequence of non-decreasing natural numbers.
 /// http://arxiv.org/pdf/1206.4300
 /// </summary>
-public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
+public readonly struct QuasiSuccinctIndices: ISerializableBits<QuasiSuccinctIndices>
 {
     private readonly int _lowBitsCount;
     private readonly Bits _lowBits;
-    private readonly SuccinctBits _highBits;
+    private readonly SuccinctBits.SuccinctBits _highBits;
     private readonly nuint _lowBitsMask;
     private readonly nuint _size;
 
     public nuint Size => _size;
 
-    public QuasiSuccinctBits(
+    public QuasiSuccinctIndices(
         nuint size,
         int lowBitsCount,
         nuint lowBitsMask,
         in Bits lowBits,
-        in SuccinctBits highBits)
+        in SuccinctBits.SuccinctBits highBits)
     {
         _size = size;
         _lowBitsCount = lowBitsCount;
@@ -31,27 +31,55 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
         _lowBitsMask = lowBitsMask;
     }
 
-    public nuint GetBit(nuint position)
+    public nuint Get(nuint position)
     {
-        nuint high = _highBits.SelectSetBits(position) - position;
-        if (_lowBitsCount == 0) return high;
+        if(position < _size)
+        {
+            nuint high = _highBits.SelectSetBits(position) - position;
+            if (_lowBitsCount == 0) return high;
 
-        nuint lowPosition = position * (nuint)_lowBitsCount;
-        nuint low = _lowBits.FetchBits(lowPosition, _lowBitsCount);
-        return high << _lowBitsCount | low;
+            nuint lowPosition = position * (nuint)_lowBitsCount;
+            nuint low = _lowBits.FetchBits(lowPosition, _lowBitsCount);
+            return high << _lowBitsCount | low;
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(position));
     }
 
-    public static QuasiSuccinctBits Read(BinaryReader reader)
+    public bool Contains(nuint value)
+    {
+        // Extract high and low parts of the value
+        var high = value >> _lowBitsCount;
+        var low = value & ((NUIntOne << _lowBitsCount) - 1);
+
+        var highMinusOne = high + 1;
+
+        // Find the range of indices in the high bits that match the high part
+        var start = _highBits.SelectSetBits(highMinusOne) - highMinusOne;
+        var end = _highBits.SelectSetBits(high) - high;
+
+        // Check the corresponding low parts in the range
+        for(var i = start; i < end; i++)
+        {
+            if(_lowBits.FetchBits(i, _lowBitsCount) == low)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static QuasiSuccinctIndices Read(BinaryReader reader)
     {
         var lowBitsCount = reader.ReadInt32();
-
         var lowBitsMask = reader.ReadNUInt();
         var position = reader.ReadNUInt();
 
         var lowBits = Bits.Read(reader);
-        var highBits = SuccinctBits.Read(reader);
+        var highBits = SuccinctBits.SuccinctBits.Read(reader);
 
-        return new QuasiSuccinctBits(
+        return new QuasiSuccinctIndices(
             size: position,
             lowBitsCount: lowBitsCount,
             lowBitsMask: lowBitsMask,
@@ -59,7 +87,7 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
             highBits: highBits);
     }
 
-    public static QuasiSuccinctBits Read(string filename)
+    public static QuasiSuccinctIndices Read(string filename)
     {
         var reader =
             new BinaryReader(
@@ -74,7 +102,6 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
     public void Write(BinaryWriter writer)
     {
         writer.Write(_lowBitsCount);
-
         writer.WriteNUInt(_lowBitsMask);
         writer.WriteNUInt(_size);
 
@@ -101,7 +128,7 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
             return false;
         }
 
-        var bits = (QuasiSuccinctBits)obj;
+        var bits = (QuasiSuccinctIndices)obj;
         return 
             _size == bits._size &&
             _lowBits.Equals(bits._lowBits) &&
@@ -111,9 +138,9 @@ public readonly struct QuasiSuccinctBits: ISerializableBits<QuasiSuccinctBits>
     public override int GetHashCode()
         => _lowBits.GetHashCode() * _highBits.GetHashCode();
 
-    public static bool operator ==(QuasiSuccinctBits left, QuasiSuccinctBits right)
+    public static bool operator ==(QuasiSuccinctIndices left, QuasiSuccinctIndices right)
         => left.Equals(right);
 
-    public static bool operator !=(QuasiSuccinctBits left, QuasiSuccinctBits right)
+    public static bool operator !=(QuasiSuccinctIndices left, QuasiSuccinctIndices right)
         => !(left == right);
 }
