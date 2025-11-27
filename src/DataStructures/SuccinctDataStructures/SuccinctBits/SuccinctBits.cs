@@ -7,8 +7,6 @@ using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits.Bits;
 
-using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
-
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
 /// <summary>

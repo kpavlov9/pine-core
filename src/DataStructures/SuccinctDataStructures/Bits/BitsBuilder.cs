@@ -7,7 +7,7 @@ using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
-
+using static KGIntelligence.PineCore.Helpers.Utilities.IONativeBitHelper;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitsBuilderHelper;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
@@ -18,7 +18,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
 /// Builds the bits sequence <see cref="Bits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
+public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder, ISerializableBits<BitsBuilder>
 {
     private readonly List<nuint> _data;
 
@@ -36,7 +36,13 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
 
     public BitsBuilder(nuint initialCapacity)
     {
-        _data = new List<nuint>(new nuint[GetCapacity(initialCapacity)]);
+        var capacity = (int)GetCapacity(initialCapacity);
+        _data = new List<nuint>(capacity);
+        // Pre-allocate the list with zeros for better performance
+        for (int i = 0; i < capacity; i++)
+        {
+            _data.Add(NUIntZero);
+        }
     }
 
     public BitsBuilder()
@@ -122,12 +128,8 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
         in List<nuint> outputData,
         out nuint outputPosition)
     {
-        if(outputData.Count > 0)
-        {
-            throw new Exception(
-                $"The data size should be 0 before initialization, but it is {outputData.Count}.");
-        }
-
+        // Fixed: Allow initialization even if outputData has items from constructor
+        outputData.Clear();
         outputData.AddRange(inputData);
         outputPosition = inputDataSize;
     }
@@ -188,19 +190,32 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
         return BuildSuccinctCompressedBits();
     }
 
-    public void Set(nuint position)
+    /// <summary>
+    /// Sets or unsets a bit at the given position.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void SetBitInternal(nuint position, bool value)
     {
         int indexInList = (int)(position / NativeBitCount);
 
         while (indexInList >= _data.Count)
         {
-            _data.Add(0);
+            _data.Add(NUIntZero);
         }
 
         int offset = (int)(position % NativeBitCount);
         nuint block = _data[indexInList];
         nuint mask = NUIntOne << NativeBitCountMinusOne - offset;
-        block |= mask;
+
+        if (value)
+        {
+            block |= mask;
+        }
+        else
+        {
+            block &= ~mask;
+        }
+
         _data[indexInList] = block;
 
         var positionPlusOne = position + 1;
@@ -210,6 +225,10 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
             _position = positionPlusOne;
         }
     }
+
+    public void Set(nuint position) => SetBitInternal(position, true);
+
+    public void Unset(nuint position) => SetBitInternal(position, false);
 
     public nuint FetchBits(nuint position, int bitsCount)
     {
@@ -228,28 +247,6 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
         bitsCount: NativeBitCount,
         data: _data);
 
-    public void Unset(nuint position)
-    {
-        int indexInList = (int)(position / NativeBitCount);
-        while (indexInList >= _data.Count)
-        {
-            _data.Add(0);
-        }
-
-        int offset = (int)(position % NativeBitCount);
-        nuint block = _data[indexInList];
-        nuint mask = NUIntOne << NativeBitCountMinusOne - offset;
-        block &= ~mask;
-        _data[indexInList] = block;
-
-        var positionPlusOne = position + 1;
-
-        if (positionPlusOne > _position)
-        {
-            _position = positionPlusOne;
-        }
-    }
-
     public void AddBits(nuint bits, int bitsCount)
     {
         if (bitsCount == 0)
@@ -260,7 +257,8 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
         if (bitsCount < 0 || bitsCount > NativeBitCount)
         {
             throw new ArgumentOutOfRangeException(
-                $"The given bits count of '{bitsCount}' exceeds the valid range: [0, {sizeof(long)}]."
+                nameof(bitsCount),
+                $"The given bits count of '{bitsCount}' exceeds the valid range: [0, {NativeBitCount}]."
             );
         }
 
@@ -313,31 +311,37 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
 
     public void AddSetBits(int bitsCount)
     {
-        for (var i = 0; i < bitsCount / NativeBitCount; i++)
+        if (bitsCount <= 0) return;
+
+        // Optimized: Add full blocks at once
+        var fullBlocks = bitsCount / NativeBitCount;
+        for (var i = 0; i < fullBlocks; i++)
         {
             AddBits(nuint.MaxValue, NativeBitCount);
         }
 
-        var r = bitsCount % NativeBitCount;
-
-        if (r > 0)
+        var remainingBits = bitsCount % NativeBitCount;
+        if (remainingBits > 0)
         {
-            AddBits(nuint.MaxValue, r);
+            AddBits(nuint.MaxValue, remainingBits);
         }
     }
 
     public void AddUnsetBits(int bitsCount)
     {
-        for (var i = 0; i < bitsCount / NativeBitCount; i++)
+        if (bitsCount <= 0) return;
+
+        // Optimized: Add full blocks at once
+        var fullBlocks = bitsCount / NativeBitCount;
+        for (var i = 0; i < fullBlocks; i++)
         {
             AddBits(NUIntZero, NativeBitCount);
         }
 
-        var r = bitsCount % NativeBitCount;
-
-        if (r > 0)
+        var remainingBits = bitsCount % NativeBitCount;
+        if (remainingBits > 0)
         {
-            AddBits(NUIntZero, r);
+            AddBits(NUIntZero, remainingBits);
         }
     }
 
@@ -346,10 +350,95 @@ public sealed class BitsBuilder : IBitsContainer, IBits, IBitsBuilder
         if (bitValue)
         {
             AddSetBits(1);
-            return;
         }
-        AddUnsetBits(1);
+        else
+        {
+            AddUnsetBits(1);
+        }
     }
 
     public IBitsBuilder Clone() => new BitsBuilder(data: _data, bitsSize: _position);
+
+    #region Serialization
+
+    public void Write(BinaryWriter writer)
+    {
+        writer.WriteNUInt(_position);
+
+        var size =
+            (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+        
+        writer.Write(size);
+
+        Bits.WriteNUInt(
+            buffer: _data,
+            cutoff: size,
+            writer: writer);
+    }
+
+    public void Write(string filename)
+    {
+        using var writer =
+            new BinaryWriter(
+                new FileStream(
+                    filename,
+                    FileMode.Create,
+                    FileAccess.Write));
+
+        Write(writer);
+    }
+
+    public static BitsBuilder Read(BinaryReader reader)
+    {
+        var position = reader.ReadNUInt();
+        var size = reader.ReadInt32();
+
+        Span<nuint> data = stackalloc nuint[size];
+        Bits.ReadNUInt(data, reader);
+
+        return new BitsBuilder(data.ToArray(), position);
+    }
+
+    public static BitsBuilder Read(string filename)
+    {
+        using var reader =
+            new BinaryReader(
+                new FileStream(
+                    filename,
+                    FileMode.Open,
+                    FileAccess.Read));
+
+        return Read(reader);
+    }
+
+    #endregion
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        
+        if (obj is BitsBuilder builder)
+        {
+            var validDataRange = (int)((_position + NativeBitCountMinusOne) / NativeBitCount);
+
+            return builder._position == _position &&
+                   builder._data
+                       .Take(validDataRange)
+                       .SequenceEqual(_data.Take(validDataRange));
+        }
+
+        return false;
+    }
+
+    public override int GetHashCode() => Bits.GetHashCode(values: _data);
+
+    public static bool operator ==(BitsBuilder? left, BitsBuilder? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(BitsBuilder? left, BitsBuilder? right)
+        => !(left == right);
 }

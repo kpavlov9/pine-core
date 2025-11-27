@@ -46,28 +46,116 @@ public readonly struct QuasiSuccinctIndices: ISerializableBits<QuasiSuccinctIndi
         throw new ArgumentOutOfRangeException(nameof(position));
     }
 
+    /// <summary>
+    /// Checks if a value exists in the quasi-succinct indices using binary search on high bits.
+    /// </summary>
     public bool Contains(nuint value)
     {
+        if (_size == 0) return false;
+
         // Extract high and low parts of the value
         var high = value >> _lowBitsCount;
-        var low = value & ((NUIntOne << _lowBitsCount) - 1);
+        var low = _lowBitsCount > 0 ? value & _lowBitsMask : 0;
 
-        var highMinusOne = high + 1;
+        // Find positions where high bits match
+        // For Elias-Fano encoding, the i-th element has high bits at position i + high_value
+        // So we need to find all positions where SelectSetBits(i) - i == high
 
-        // Find the range of indices in the high bits that match the high part
-        var start = _highBits.SelectSetBits(highMinusOne) - highMinusOne;
-        var end = _highBits.SelectSetBits(high) - high;
+        // Binary search to find the range of indices with matching high bits
+        nuint start = 0;
+        nuint end = _size;
 
-        // Check the corresponding low parts in the range
-        for(var i = start; i < end; i++)
+        // Find first position where high bits >= target high
+        while (start < end)
         {
-            if(_lowBits.FetchBits(i, _lowBitsCount) == low)
+            nuint mid = start + (end - start) / 2;
+            nuint midHigh = _highBits.SelectSetBits(mid) - mid;
+            
+            if (midHigh < high)
             {
-                return true;
+                start = mid + 1;
+            }
+            else
+            {
+                end = mid;
+            }
+        }
+
+        // If no position found or we're out of bounds
+        if (start >= _size)
+        {
+            return false;
+        }
+
+        // Check all positions with matching high bits
+        for (nuint i = start; i < _size; i++)
+        {
+            nuint currentHigh = _highBits.SelectSetBits(i) - i;
+            
+            // If we've passed the target high value, it doesn't exist
+            if (currentHigh > high)
+            {
+                return false;
+            }
+
+            // If high bits match, check low bits
+            if (currentHigh == high)
+            {
+                if (_lowBitsCount == 0)
+                {
+                    return true; // No low bits to check
+                }
+
+                nuint lowPosition = i * (nuint)_lowBitsCount;
+                nuint currentLow = _lowBits.FetchBits(lowPosition, _lowBitsCount);
+                
+                if (currentLow == low)
+                {
+                    return true;
+                }
+                
+                // Since values are sorted, if currentLow > low, value doesn't exist
+                if (currentLow > low)
+                {
+                    return false;
+                }
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Performs binary search to find the index of a value, or -1 if not found.
+    /// </summary>
+    public long IndexOf(nuint value)
+    {
+        if (_size == 0) return -1;
+
+        nuint left = 0;
+        nuint right = _size - 1;
+
+        while (left <= right)
+        {
+            nuint mid = left + (right - left) / 2;
+            nuint midValue = Get(mid);
+
+            if (midValue == value)
+            {
+                return (long)mid;
+            }
+            else if (midValue < value)
+            {
+                left = mid + 1;
+            }
+            else
+            {
+                if (mid == 0) break;
+                right = mid - 1;
+            }
+        }
+
+        return -1;
     }
 
     public static QuasiSuccinctIndices Read(BinaryReader reader)
@@ -89,7 +177,7 @@ public readonly struct QuasiSuccinctIndices: ISerializableBits<QuasiSuccinctIndi
 
     public static QuasiSuccinctIndices Read(string filename)
     {
-        var reader =
+        using var reader =
             new BinaryReader(
                 new FileStream(
                     filename,
@@ -111,7 +199,7 @@ public readonly struct QuasiSuccinctIndices: ISerializableBits<QuasiSuccinctIndi
 
     public void Write(string filename)
     {
-        var writer =
+        using var writer =
             new BinaryWriter(
                 new FileStream(
                     filename,
@@ -131,12 +219,25 @@ public readonly struct QuasiSuccinctIndices: ISerializableBits<QuasiSuccinctIndi
         var bits = (QuasiSuccinctIndices)obj;
         return 
             _size == bits._size &&
+            _lowBitsCount == bits._lowBitsCount &&
+            _lowBitsMask == bits._lowBitsMask &&
             _lowBits.Equals(bits._lowBits) &&
             _highBits.Equals(bits._highBits);
     }
 
     public override int GetHashCode()
-        => _lowBits.GetHashCode() * _highBits.GetHashCode();
+    {
+        // Better hash code implementation
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 31 + _size.GetHashCode();
+            hash = hash * 31 + _lowBitsCount.GetHashCode();
+            hash = hash * 31 + _lowBits.GetHashCode();
+            hash = hash * 31 + _highBits.GetHashCode();
+            return hash;
+        }
+    }
 
     public static bool operator ==(QuasiSuccinctIndices left, QuasiSuccinctIndices right)
         => left.Equals(right);
