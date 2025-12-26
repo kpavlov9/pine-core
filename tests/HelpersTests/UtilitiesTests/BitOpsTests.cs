@@ -6,7 +6,7 @@ namespace PinusTests.units.PinusCore
     {
         [Theory]
         [InlineData(0xffff0000, 20, 4, 0xffffffff00000000UL, 52, 4 + 16)]
-        public void masked_pop_count(
+        public void MaskedPopCount(
             uint uintValue,
             uint uintOffset,
             uint uintPopCount,
@@ -15,8 +15,8 @@ namespace PinusTests.units.PinusCore
             ulong ulongPopCount)
         {
 
-            var resultedUintPopCount = MaskedPopCount(uintValue, uintOffset);
-            var resultedULongPopCount = MaskedPopCount(ulongValue, ulongOffset);
+            var resultedUintPopCount = KGIntelligence.PineCore.Helpers.Utilities.BitOps.MaskedPopCount(uintValue, uintOffset);
+            var resultedULongPopCount = KGIntelligence.PineCore.Helpers.Utilities.BitOps.MaskedPopCount(ulongValue, ulongOffset);
             Assert.True(uintPopCount == resultedUintPopCount);
             Assert.True(ulongPopCount == resultedULongPopCount);
         }
@@ -40,7 +40,7 @@ namespace PinusTests.units.PinusCore
             0xffff0000,
             0x00000000ffffffffUL,
             0xffffffff00000000UL)]
-        public void reverse_bits(
+        public void ReverseBits(
             byte byteValue,
             byte reversedByteBits,
             ushort ushortValue,
@@ -50,10 +50,10 @@ namespace PinusTests.units.PinusCore
             ulong ulongValue,
             ulong reversedULongBits)
         {
-            var resultedByteReversedBits = ReverseBits(byteValue);
-            var resultedUShortReversedBits = ReverseBits(ushortValue);
-            var resultedUIntReversedBits = ReverseBits(uintValue);
-            var resultedULongReversedBits = ReverseBits(ulongValue);
+            var resultedByteReversedBits = KGIntelligence.PineCore.Helpers.Utilities.BitOps.ReverseBits(byteValue);
+            var resultedUShortReversedBits = KGIntelligence.PineCore.Helpers.Utilities.BitOps.ReverseBits(ushortValue);
+            var resultedUIntReversedBits = KGIntelligence.PineCore.Helpers.Utilities.BitOps.ReverseBits(uintValue);
+            var resultedULongReversedBits = KGIntelligence.PineCore.Helpers.Utilities.BitOps.ReverseBits(ulongValue);
             Assert.True(reversedByteBits == resultedByteReversedBits);
             Assert.True(reversedUShortBits == resultedUShortReversedBits);
             Assert.True(reversedUIntBits == resultedUIntReversedBits);
@@ -68,7 +68,7 @@ namespace PinusTests.units.PinusCore
             0xffffffff00000000UL,
             33,
             1)]
-        public void rank_of_reversed_set_bits(
+        public void RankOfReversed_set_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntRank,
@@ -99,7 +99,7 @@ namespace PinusTests.units.PinusCore
             0xffffffff00000000UL,
             33,
             32)]
-        public void rank_of_reversed_unset_bits(
+        public void RankOfReversed_unset_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntRank,
@@ -130,7 +130,7 @@ namespace PinusTests.units.PinusCore
             0x00000000ffffffffUL,
             37,
             5)]
-        public void rank_set_bits(
+        public void Rank_set_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntRank,
@@ -161,7 +161,7 @@ namespace PinusTests.units.PinusCore
             0x00000000ffffffffUL,
             33,
             32)]
-        public void rank_unset_bits(
+        public void Rank_unset_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntRank,
@@ -208,7 +208,7 @@ namespace PinusTests.units.PinusCore
             0xf0f0f0f0f0f0f0f0UL,
             21,
             41)]
-        public void select_set_bits(
+        public void Select_set_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntSelect,
@@ -259,7 +259,7 @@ namespace PinusTests.units.PinusCore
             0xffffffff00000000UL,
             31,
             63)]
-        public void select_unset_bits(
+        public void Select_unset_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntSelect,
@@ -301,7 +301,7 @@ namespace PinusTests.units.PinusCore
             0xf0f0f0f0f0f0f0f0UL,
             31,
             63)]
-        public void select_of_reversed_set_bits(
+        public void SelectOfReversed_set_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntSelect,
@@ -330,7 +330,7 @@ namespace PinusTests.units.PinusCore
             0xffffffff00000000,
             32,
             31)]
-        public void select_of_reversed_unset_bits(
+        public void SelectOfReversed_unset_bits(
             uint uintValue,
             int uIntPosition,
             int expectedUIntSelection,

@@ -11,7 +11,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region BitsBuilder Serialization Tests
 
         [Fact]
-        public void bits_builder_serialization_basic()
+        public void BitsBuilder_serialization_basic()
         {
             var builder = new BitsBuilder(128);
             builder.Set(64);
@@ -30,7 +30,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_serialization_to_file()
+        public void BitsBuilder_serialization_to_file()
         {
             var builder = new BitsBuilder(256);
             for (uint i = 0; i < 100; i++)
@@ -57,7 +57,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_serialization_empty()
+        public void BitsBuilder_serialization_empty()
         {
             var builder = new BitsBuilder();
 
@@ -75,7 +75,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region BitsBuilder Equality Tests
 
         [Fact]
-        public void bits_builder_equality()
+        public void BitsBuilder_equality()
         {
             var builder1 = new BitsBuilder(128);
             var builder2 = new BitsBuilder(128);
@@ -89,7 +89,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_inequality()
+        public void BitsBuilder_inequality()
         {
             var builder1 = new BitsBuilder(128);
             var builder2 = new BitsBuilder(128);
@@ -103,7 +103,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_equality_null_safety()
+        public void BitsBuilder_equality_null_safety()
         {
             var builder = new BitsBuilder(128);
             BitsBuilder? nullBuilder = null;
@@ -118,7 +118,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region NativeBitsBuilderHelper Bug Fix Tests
 
         [Fact]
-        public void native_bits_builder_64bit_value()
+        public void native_BitsBuilder_64bit_value()
         {
             var builder = new BitsBuilder();
             ulong value = 0x123456789ABCDEF0UL;
@@ -146,7 +146,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void native_bits_builder_multiple_64bit_values()
+        public void native_BitsBuilder_multiple_64bit_values()
         {
             var builder = new BitsBuilder();
             ulong[] values = { 
@@ -168,7 +168,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region QuasiSuccinctIndices.Contains Bug Fix Tests
 
         [Fact]
-        public void quasi_succinct_contains_basic()
+        public void QuasiSuccinctBitsBuilder_contains_basic()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000);
             
@@ -191,7 +191,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_contains_with_duplicate_high_bits()
+        public void QuasiSuccinctBitsBuilder_contains_with_duplicate_high_bits()
         {
             // This test exposes the bug in the old Contains() implementation
             var builder = new QuasiSuccinctBitsBuilder(1000, 10000);
@@ -228,7 +228,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_contains_edge_cases()
+        public void QuasiSuccinctBitsBuilder_contains_edge_cases()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             
@@ -245,7 +245,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_contains_empty()
+        public void QuasiSuccinctBitsBuilder_contains_empty()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             var indices = builder.Build();
@@ -259,7 +259,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region QuasiSuccinctIndices.IndexOf Tests
 
         [Fact]
-        public void quasi_succinct_index_of_basic()
+        public void QuasiSuccinctBitsBuilder_index_of_basic()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000);
             
@@ -282,7 +282,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_index_of_performance()
+        public void QuasiSuccinctBitsBuilder_index_of_performance()
         {
             // Test that IndexOf is more efficient than linear search
             var builder = new QuasiSuccinctBitsBuilder(10000, 1000000);
@@ -310,7 +310,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region QuasiSuccinctBitsBuilder Query During Construction Tests
 
         [Fact]
-        public void quasi_succinct_builder_get_with_cache()
+        public void QuasiSuccinctBitsBuilder_builder_get_with_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             
@@ -327,7 +327,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_get_without_cache()
+        public void QuasiSuccinctBitsBuilder_builder_get_without_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: false);
             
@@ -345,7 +345,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_contains_with_cache()
+        public void QuasiSuccinctBitsBuilder_builder_contains_with_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             
@@ -365,7 +365,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_index_of_with_cache()
+        public void QuasiSuccinctBitsBuilder_builder_index_of_with_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             
@@ -384,7 +384,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_clear()
+        public void QuasiSuccinctBitsBuilder_builder_clear()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             
@@ -410,7 +410,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region QuasiSuccinctBitsBuilder Serialization Tests
 
         [Fact]
-        public void quasi_succinct_builder_serialization_with_cache()
+        public void QuasiSuccinctBitsBuilder_builder_serialization_with_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             
@@ -435,7 +435,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_serialization_without_cache()
+        public void QuasiSuccinctBitsBuilder_builder_serialization_without_cache()
         {
             var builder = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: false);
             
@@ -464,7 +464,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region BitsBuilder Optimization Tests
 
         [Fact]
-        public void bits_builder_preallocated_capacity()
+        public void BitsBuilder_preallocated_capacity()
         {
             // Test that pre-allocation works correctly
             var builder = new BitsBuilder(1024);
@@ -484,7 +484,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_set_unset_unified()
+        public void BitsBuilder_set_unset_unified()
         {
             var builder = new BitsBuilder(128);
 
@@ -499,7 +499,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_add_set_bits_optimized()
+        public void BitsBuilder_add_set_bits_optimized()
         {
             var builder = new BitsBuilder();
 
@@ -514,7 +514,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void bits_builder_add_unset_bits_optimized()
+        public void BitsBuilder_add_unset_bits_optimized()
         {
             var builder = new BitsBuilder();
 
@@ -533,7 +533,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         #region Error Handling Tests
 
         [Fact]
-        public void bits_builder_invalid_bits_count()
+        public void BitsBuilder_invalid_bits_count()
         {
             var builder = new BitsBuilder();
 
@@ -545,7 +545,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_exceeds_max_length()
+        public void QuasiSuccinctBitsBuilder_builder_exceeds_max_length()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             
@@ -558,7 +558,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_non_increasing_sequence()
+        public void QuasiSuccinctBitsBuilder_builder_non_increasing_sequence()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             
@@ -568,7 +568,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_builder_exceeds_upper_bound()
+        public void QuasiSuccinctBitsBuilder_builder_exceeds_upper_bound()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             
@@ -576,7 +576,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_get_out_of_range()
+        public void QuasiSuccinctBitsBuilder_get_out_of_range()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000, enableCache: true);
             builder.Add(10);
@@ -586,7 +586,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void quasi_succinct_indices_get_out_of_range()
+        public void QuasiSuccinctBitsBuilder_indices_get_out_of_range()
         {
             var builder = new QuasiSuccinctBitsBuilder(10, 1000);
             builder.Add(10);
@@ -657,7 +657,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void compare_cached_vs_uncached_builder()
+        public void compare_cached_vs_uncached_Builder()
         {
             var builderWithCache = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: true);
             var builderWithoutCache = new QuasiSuccinctBitsBuilder(100, 10000, enableCache: false);

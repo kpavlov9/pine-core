@@ -7,7 +7,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
     public class QuasiSuccinctBitsTests
     {
         [Fact]
-        public void set_and_get()
+        public void Set_and_Get()
         {
             const int upperBound = 100 * 10000;
             var bitsBuilder = new QuasiSuccinctBitsBuilder(10000, upperBound);
@@ -35,7 +35,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void read_and_write()
+        public void Read_and_Write()
         {
             var stream = new MemoryStream();
             var writer = new BinaryWriter(stream);

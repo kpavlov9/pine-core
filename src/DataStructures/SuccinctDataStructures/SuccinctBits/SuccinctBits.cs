@@ -59,6 +59,8 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankSetBits(nuint bitPositionCutoff)
     {
+        if (bitPositionCutoff > _size)
+            bitPositionCutoff = _size;
         ValidatePosition(position: bitPositionCutoff, size: _size);
         return RankSetBits(
             bitPositionCutoff: bitPositionCutoff,
@@ -98,6 +100,8 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankUnsetBits(nuint bitPositionCutoff)
     {
+        if (bitPositionCutoff > _size)
+            bitPositionCutoff = _size;
         ValidatePosition(position: bitPositionCutoff, size: _size);
         return RankUnsetBits(
         bitPositionCutoff: bitPositionCutoff,

@@ -8,7 +8,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
     public class BitsTests
     {
         [Fact]
-        public void clear()
+        public void Clear()
         {
             var bitsBuilder = new BitsBuilder();
 
@@ -24,7 +24,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void clear_and_build_bit_indices_bits()
+        public void ClearAndBuildBits_indices_bits()
         {
             var bitsBuilder = new BitsBuilder(128);
             bitsBuilder.Set(64);
@@ -55,7 +55,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
 
         [Fact]
-        public void clear_and_build_bit_indices_succinct()
+        public void ClearAndBuildBits_indices_succinct()
         {
             var bitsBuilder = new SuccinctBitsBuilder(128);
             bitsBuilder.Set(64);
@@ -85,7 +85,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void clear_and_build_bit_indices_succinct_compressed()
+        public void ClearAndBuildBits_indices_succinct_compressed()
         {
             var compressedBitsBuilder = new SuccinctCompressedBitsBuilder(128);
             compressedBitsBuilder.Set(64);
@@ -118,7 +118,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void build_bit_indices_bits()
+        public void BuildBits_indices_bits()
         {
             var bitsBuilder = new BitsBuilder(128);
             bitsBuilder.Set(64);
@@ -144,7 +144,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
 
 
         [Fact]
-        public void build_bit_indices_succinct()
+        public void BuildBits_indices_succinct()
         {
             var bitsBuilder = new SuccinctBitsBuilder(128);
             bitsBuilder.Set(64);
@@ -169,7 +169,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void build_bit_indices_succinct_compressed()
+        public void BuildBits_indices_succinct_compressed()
         {
             var bitsBuilder = new SuccinctCompressedBitsBuilder(128);
             bitsBuilder.Set(64);
@@ -194,7 +194,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void add_and_fetch_bits()
+        public void AddBits_and_FetchBits()
         {
             var bitsBuilder = new BitsBuilder(128);
             nuint B11111;
@@ -242,7 +242,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void set_and_get_bit()
+        public void Set_and_GetBit()
         {
             var bitsBuilder = new BitsBuilder(128);
 
@@ -270,7 +270,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void add_ones()
+        public void AddSetBits()
         {
             var bitsBuilder = new BitsBuilder(1024);
 
@@ -297,7 +297,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void add_zeros()
+        public void AddUnsetBits()
         {
             var bitsBuilder = new BitsBuilder(1024);
 
@@ -327,7 +327,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void read_and_write()
+        public void Read_and_Write()
         {
             var stream = new MemoryStream();
             var writer = new BinaryWriter(stream);
@@ -362,7 +362,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void from_values()
+        public void Build_from_values()
         {
             var values = new nuint[] { 1, 1, 1 };
             var bitsBuilder = new BitsBuilder(values, (nuint)values.Length * NativeBitCount);
@@ -402,7 +402,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void from_byte_list()
+        public void Build_from_byte_list()
         {
             var values = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
             var bitsBuilder = new BitsBuilder(values);
@@ -435,7 +435,7 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
         }
 
         [Fact]
-        public void from_byte_enumerable()
+        public void Build_from_byte_enumerable()
         {
             var values = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1 };
             IEnumerable<byte> enumerableValues = values;

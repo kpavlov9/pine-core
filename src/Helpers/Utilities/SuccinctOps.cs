@@ -26,14 +26,12 @@ namespace KGIntelligence.PineCore.Helpers.Utilities
         internal static void GetMask(int rSmall, out nuint mask) =>
             mask = NUIntOne << rSmall;
 
-        internal static void ValidatePosition(
-            nuint position,
-            nuint size)
+        internal static void ValidatePosition(nuint position, nuint size)
         {
             if (position >= size)
             {
                 throw new IndexOutOfRangeException(
-                    $@"The argument {nameof(position)} exceeds the sequence length {size}");
+                    $"The argument {nameof(position)} exceeds the sequence length {size}");
             }
         }
 
