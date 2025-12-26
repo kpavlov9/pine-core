@@ -1,6 +1,6 @@
 ﻿using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 
-namespace PinusTests.units.PinusCore
+namespace  PineCore.tests.DataStructuresTests.HelpersTests.UtilitiesTests
 {
     public class BitOpsTests
     {
