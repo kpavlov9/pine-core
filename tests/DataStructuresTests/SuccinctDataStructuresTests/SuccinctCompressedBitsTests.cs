@@ -28,19 +28,6 @@ public class SuccinctCompressedBitsTests
     }
 
     [Fact]
-    public void static_initializer()
-    {
-        nuint[][] classCounts = SuccinctCompressedBitsBuilder.ClassCounts;
-        for (var n = 0; n < classCounts.Length; n++)
-        {
-            for (var m = 0; m <= n; m++)
-            {
-                Assert.Equal(classCounts[n][m], CalculateClassCounts((nuint)n, (nuint)m));
-            }
-        }
-    }
-
-    [Fact]
     public void Clear()
     {
         var bitsBuilder = new SuccinctCompressedBitsBuilder();

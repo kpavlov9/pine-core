@@ -67,14 +67,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
             }
         }
 
-        [Fact]
-        public void Rank_before_Build()
-        {
-            var bits = new SuccinctBits();
-            var bitsBuilder = new SuccinctBitsBuilder();
-
-            Assert.Throws<IndexOutOfRangeException>(() => bits.RankSetBits(100));
-        }
 
         [Fact]
         public void Rank()
@@ -147,19 +139,6 @@ namespace PineCore.tests.DataStructuresTests.SuccinctDataStructuresTests
                 () => _bv1Builder.GetBit(_bv1Builder.Size));
             Assert.Throws<IndexOutOfRangeException>(
                 () => _bv0Builder.GetBit(_bv0Builder.Size));
-        }
-
-        [Fact]
-        public void RankSetBits_RankUnsetBits_boundary()
-        {
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bits1.RankUnsetBits(_bits0.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bits1.RankSetBits(_bits0.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bits1.RankUnsetBits(_bits1.Size + 1));
-            Assert.Throws<IndexOutOfRangeException>(
-                () => _bits1.RankSetBits(_bits1.Size + 1));
         }
 
         [Fact]

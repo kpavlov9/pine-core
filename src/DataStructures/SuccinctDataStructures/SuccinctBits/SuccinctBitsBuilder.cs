@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
@@ -11,7 +13,7 @@ namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Succinct
 /// Builds the bits sequence <see cref="SuccinctBits"/>
 /// by adding bit by bit or an array of bits.
 /// </summary>
-public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
+public sealed class SuccinctBitsBuilder : IBitsContainer, IBitsBuilder, IBits
 {
     private readonly List<nuint> _values;
     private readonly List<nuint> _ranks;
@@ -19,18 +21,14 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
     private nuint _setBitsCount;
 
     public nuint Size => _size;
-
     public IEnumerable<nuint> Data => _values.Select(ReverseBits);
-
     public nuint SetBitsCount => _setBitsCount;
     public nuint UnsetBitsCount => _size - _setBitsCount;
 
-    private SuccinctCompressedBitsBuilder? _succintCompressedBitsBuilder;
-
     public SuccinctBitsBuilder()
     {
-        _values = new List<nuint>();
-        _ranks = new List<nuint>();
+        _values = [];
+        _ranks = [];
         _size = 0;
         _setBitsCount = 0;
     }
@@ -47,131 +45,73 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
         _setBitsCount = setBitsCount;
     }
 
-     public void PushZeroes(int bitsCount)
-     {
-        if(bitsCount > 0)
-        {
-            Unset((nuint)bitsCount - 1);
-            return;
-        }
-        
-        throw new ArgumentException(
-            "The bits count should be great than zero.",
-            nameof(bitsCount));
-     }
-
-    public void PushOnes(int bitsCount)
-    {
-        var i = 0;
-
-        do
-        {
-            Set(_size);
-        }
-        while(i++ < bitsCount);
-    }
-
-    public void Add(bool bitValue)
-    {
-        if(bitValue)
-        {
-            Set(_size);
-            return;
-        }
-
-        Unset(_size);
-    }
-
     public SuccinctBitsBuilder(IBitsContainer bits)
     {
-        _values = new List<nuint>();
-        _ranks = new List<nuint>();
-
-        InitializeFromBits(bits: bits);
+        _values = [];
+        _ranks = [];
+        InitializeFromBits(bits);
     }
 
     public SuccinctBitsBuilder(nuint initialSize)
     {
-        _values =
-            new List<nuint>(
-                new nuint[
-                    (initialSize + NativeBitCountMinusOne) / NativeBitCount
-                    ]);
-        _ranks = new List<nuint>();
+        var capacity = (int)((initialSize + NativeBitCountMinusOne) / NativeBitCount);
+        _values = new List<nuint>(capacity);
+        for (int i = 0; i < capacity; i++)
+            _values.Add(0);
+        
+        _ranks = [];
         _size = initialSize;
         _setBitsCount = 0;
     }
 
     public SuccinctBitsBuilder(IEnumerable<byte> bytes)
     {
-        _values = new List<nuint>();
-        _ranks = new List<nuint>();
-
+        _values = [];
+        _ranks = [];
         InitializeFromBytes(bytes);
     }
 
-    private SuccinctBits InitializeFromBits(
-        IBitsContainer bits)
+    private void InitializeFromBits(IBitsContainer bits)
     {
         _values.Clear();
         _ranks.Clear();
 
-        ConstructFromBits(
-            bits: bits,
-            values: _values,
-            size: out _size);
-
-        return Build();
-    }
-
-    private SuccinctBits InitializeFromBytes(
-        IEnumerable<byte> bytes)
-    {
-        _values.Clear();
-        _ranks.Clear();
-
-        ConstructFromBytes(
-            bytes: bytes,
-            values: _values,
-            size: out _size);
-
-        return Build();
-    }
-
-    private static void ConstructFromBytes(
-      IEnumerable<byte> bytes,
-      List<nuint> values,
-      out nuint size)
-    {
-        nuint value = 0;
-        nuint i = 0;
-        foreach (byte b in bytes)
-        {
-            value = value << BitCountInByte | b;
-            ++i;
-            if (i % BytesCountInValue == 0)
-            {
-                values.Add(ReverseBits(value));
-            }
-        }
-        if (i % BytesCountInValue > 0)
-        {
-            values.Add(ReverseBits(value));
-        }
-        size = i * BitCountInByte;
-    }
-
-    private static void ConstructFromBits(
-        IBitsContainer bits,
-        List<nuint> values,
-        out nuint size)
-    {
         foreach (nuint bitValues in bits.Data)
         {
-            values.Add(ReverseBits(bitValues));
+            _values.Add(ReverseBits(bitValues));
         }
 
-        size = bits.Size;
+        _size = bits.Size;
+        _setBitsCount = 0;
+    }
+
+    private void InitializeFromBytes(IEnumerable<byte> bytes)
+    {
+        _values.Clear();
+        _ranks.Clear();
+
+        nuint value = 0;
+        nuint i = 0;
+        
+        foreach (byte b in bytes)
+        {
+            value = (value << BitCountInByte) | b;
+            i++;
+            
+            if (i % BytesCountInValue == 0)
+            {
+                _values.Add(ReverseBits(value));
+                value = 0;
+            }
+        }
+        
+        if (i % BytesCountInValue > 0)
+        {
+            _values.Add(ReverseBits(value));
+        }
+        
+        _size = i * BitCountInByte;
+        _setBitsCount = 0;
     }
 
     public void Clear()
@@ -185,7 +125,32 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
     public SuccinctBits ClearAndInitialize(IBitsContainer bits)
     {
         Clear();
-        return InitializeFromBits(bits: bits);
+        InitializeFromBits(bits);
+        return Build();
+    }
+
+    public void PushZeroes(int bitsCount)
+    {
+        if (bitsCount > 0)
+        {
+            Unset((nuint)bitsCount - 1);
+        }
+    }
+
+    public void PushOnes(int bitsCount)
+    {
+        for (int i = 0; i < bitsCount; i++)
+        {
+            Set(_size);
+        }
+    }
+
+    public void Add(bool bitValue)
+    {
+        if (bitValue)
+            Set(_size);
+        else
+            Unset(_size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,16 +159,13 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
         if (position >= _size)
         {
             throw new IndexOutOfRangeException(
-                $"The argument {nameof(position)} exceeds the sequence length {_size}");
+                $"Position {position} exceeds sequence length {_size}");
         }
 
-        GetBlockPositions(
-            position,
-            out var qSmall,
-            out var rSmall);
+        int qSmall = (int)position / SmallBlockSize;
+        int rSmall = (int)position % SmallBlockSize;
 
-        GetMask(rSmall, out var mask);
-        return (_values[qSmall] & mask) != 0;
+        return ((_values[qSmall] >> rSmall) & 1) != 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -214,19 +176,16 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
             _size = position + 1;
         }
 
-        GetBlockPositions(
-            position,
-            out var qSmall,
-            out var rSmall);
+        int qSmall = (int)position / SmallBlockSize;
+        int rSmall = (int)position % SmallBlockSize;
 
         while (qSmall >= _values.Count)
         {
             _values.Add(0);
         }
 
-        GetMask(rSmall, out var mask);
-
-        var newValue = _values[qSmall] | mask;
+        nuint mask = NUIntOne << rSmall;
+        nuint newValue = _values[qSmall] | mask;
 
         if (_values[qSmall] != newValue)
         {
@@ -243,18 +202,16 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
             _size = position + 1;
         }
 
-        GetBlockPositions(
-            position,
-            out var qSmall,
-            out var rSmall);
+        int qSmall = (int)position / SmallBlockSize;
+        int rSmall = (int)position % SmallBlockSize;
 
         while (qSmall >= _values.Count)
         {
             _values.Add(0);
         }
 
-        GetMask(rSmall, out var mask);
-        var newValue = _values[qSmall] & ~mask;
+        nuint mask = NUIntOne << rSmall;
+        nuint newValue = _values[qSmall] & ~mask;
 
         if (_values[qSmall] != newValue)
         {
@@ -264,19 +221,26 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
         _values[qSmall] = newValue;
     }
 
+    /// <summary>
+    /// Build using Span-based PopCount for efficiency.
+    /// </summary>
     public SuccinctBits Build()
     {
         _ranks.Clear();
         _ranks.Capacity = (_values.Count + BlockRate - 1) / BlockRate;
         _setBitsCount = 0;
-        for (var i = 0; i < _values.Count; i++)
+
+        // Use Span for efficient iteration
+        var span = CollectionsMarshal.AsSpan(_values);
+        
+        for (int i = 0; i < span.Length; i++)
         {
             if (i % BlockRate == 0)
             {
                 _ranks.Add(_setBitsCount);
             }
 
-            _setBitsCount += PopCount(value: _values[i]);
+            _setBitsCount += (nuint)BitOperations.PopCount(span[i]);
         }
 
         return new SuccinctBits(
@@ -294,19 +258,12 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
 
     public ISuccinctCompressedBits BuildSuccinctCompressedBits()
     {
-        _succintCompressedBitsBuilder ??= new SuccinctCompressedBitsBuilder(this);
-
-        return _succintCompressedBitsBuilder.Build();
+        var builder = new SuccinctCompressedBitsBuilder(this);
+        return builder.Build();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override int GetHashCode() => Bits.Bits.GetHashCode(values: _values);
-
-    public IBits ClearAndBuildBits(IBitsContainer bits)
-        => ClearAndInitialize(bits);
-
-    public ISuccinctBits ClearAndBuildSuccinctBits(IBitsContainer bits)
-        => ClearAndInitialize(bits);
+    public IBits ClearAndBuildBits(IBitsContainer bits) => ClearAndInitialize(bits);
+    public ISuccinctBits ClearAndBuildSuccinctBits(IBitsContainer bits) => ClearAndInitialize(bits);
 
     public ISuccinctCompressedBits ClearAndBuildSuccinctCompressedBits(IBitsContainer bits)
     {
@@ -315,8 +272,11 @@ public sealed class SuccinctBitsBuilder: IBitsContainer, IBitsBuilder, IBits
     }
 
     public IBitsBuilder Clone() => new SuccinctBitsBuilder(
-        values: _values.ToList(),
-        ranks: _ranks.ToList(),
-        size: _size,
-        setBitsCount: _setBitsCount);
+        _values.ToList(),
+        _ranks.ToList(),
+        _size,
+        _setBitsCount);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int GetHashCode() => Bits.Bits.GetHashCode(values: _values);
 }

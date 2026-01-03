@@ -1,10 +1,12 @@
 ﻿using System.Collections.Immutable;
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using static KGIntelligence.PineCore.Helpers.Utilities.BitOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.Unions;
-using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits.Bits;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
@@ -20,8 +22,9 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     private readonly nuint _setBitsCount;
 
     public nuint Size => _size;
-
     public IEnumerable<nuint> Data => _values.Select(ReverseBits);
+    public nuint SetBitsCount => _setBitsCount;
+    public nuint UnsetBitsCount => _size - _setBitsCount;
 
     public SuccinctBits(
         nuint size,
@@ -35,64 +38,70 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
         _ranks = ranks;
     }
 
+    /// <summary>
+    /// Get bit at position using branch-free extraction.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetBit(nuint position)
     {
-        ValidatePosition(
-            position: position,
-            size: _size);
+        if (position >= _size)
+        {
+            throw new IndexOutOfRangeException(
+                $"Position {position} exceeds sequence length {_size}");
+        }
 
-        GetBlockPositions(
-            position,
-            out int qSmall,
-            out int rSmall);
-
-        GetMask(rSmall, out var mask);
-        return (_values[qSmall] & mask) != 0;
+        int qSmall = ((int)position / SmallBlockSize);
+        int rSmall = ((int)position % SmallBlockSize);
+        
+        // Branch-free: extract single bit
+        return ((_values[qSmall] >> rSmall) & 1) != 0;
     }
 
-    public nuint SetBitsCount
-        => _setBitsCount;
-
-    public nuint UnsetBitsCount
-        => _size - _setBitsCount;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankSetBits(nuint bitPositionCutoff)
     {
         if (bitPositionCutoff > _size)
             bitPositionCutoff = _size;
-        ValidatePosition(position: bitPositionCutoff, size: _size);
-        return RankSetBits(
-            bitPositionCutoff: bitPositionCutoff,
-            ranks: _ranks,
-            values: _values);
+        
+        if (bitPositionCutoff == 0)
+            return 0;
+
+        // Use concrete ImmutableArray directly instead of IReadOnlyList
+        return RankSetBitsOptimized(bitPositionCutoff, _ranks, _values);
     }
 
-    internal static nuint RankSetBits(
+    /// <summary>
+    /// Optimized rank using direct array access (no interface dispatch).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nuint RankSetBitsOptimized(
         nuint bitPositionCutoff,
-        IReadOnlyList<nuint> ranks,
-        IReadOnlyList<nuint> values)
+        ImmutableArray<nuint> ranks,
+        ImmutableArray<nuint> values)
     {
-        nuint rank = 0;
-
-        if (bitPositionCutoff == 0)
-        {
-            return rank;
-        }
-
         bitPositionCutoff--;
 
-        CalculateInitialRank(
-            ranks: ranks,
-            bitPositionCutoff: bitPositionCutoff,
-            rank: ref rank,
-            qLarge: out var qLarge);
+        // Calculate large block position
+        int qLarge = (int)bitPositionCutoff / LargeBlockSize;
+        nuint rank = ranks[qLarge];
 
-        CalculateRankSetBits(
-            values: values,
-            bitPositionCutoff: bitPositionCutoff,
-            qLarge: qLarge,
-            rank: ref rank);
+        // Calculate small block positions
+        int qSmall = (int)bitPositionCutoff / SmallBlockSize;
+        int rSmall = (int)bitPositionCutoff % SmallBlockSize;
+
+        int begin = qLarge * BlockRate;
+
+        // Sum PopCounts for intermediate blocks
+        for (int j = begin; j < qSmall; j++)
+        {
+            rank += (nuint)BitOperations.PopCount(values[j]);
+        }
+
+        // Handle final partial block
+        nuint lastValue = values[qSmall];
+        lastValue <<= SmallBlockSize - rSmall - 1;
+        rank += (nuint)BitOperations.PopCount(lastValue);
 
         return rank;
     }
@@ -102,200 +111,139 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     {
         if (bitPositionCutoff > _size)
             bitPositionCutoff = _size;
-        ValidatePosition(position: bitPositionCutoff, size: _size);
-        return RankUnsetBits(
-        bitPositionCutoff: bitPositionCutoff,
-        ranks: _ranks,
-        values: _values);
+        
+        if (bitPositionCutoff == 0)
+            return 0;
+
+        return RankUnsetBitsOptimized(bitPositionCutoff, _ranks, _values);
     }
 
-    internal static nuint RankUnsetBits(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nuint RankUnsetBitsOptimized(
         nuint bitPositionCutoff,
-        IReadOnlyList<nuint> ranks,
-        IReadOnlyList<nuint> values)
+        ImmutableArray<nuint> ranks,
+        ImmutableArray<nuint> values)
     {
-        nuint rank = 0;
-
-        if (bitPositionCutoff == 0)
-        {
-            return rank;
-        }
-
         bitPositionCutoff--;
 
-        CalculateInitialRank(
-            ranks: ranks,
-            bitPositionCutoff: bitPositionCutoff,
-            rank: ref rank,
-            qLarge: out var qLarge);
+        int qLarge = (int)bitPositionCutoff / LargeBlockSize;
+        nuint rank = (nuint)(qLarge * LargeBlockSize) - ranks[qLarge];
 
-        CalculateRankUnsetBits(
-            values: values,
-            bitPositionCutoff: bitPositionCutoff,
-            qLarge: qLarge,
-            rank: ref rank);
+        int qSmall = (int)bitPositionCutoff / SmallBlockSize;
+        int rSmall = (int)bitPositionCutoff % SmallBlockSize;
+
+        int begin = qLarge * BlockRate;
+
+        for (int j = begin; j < qSmall; j++)
+        {
+            rank += (nuint)BitOperations.PopCount(~values[j]);
+        }
+
+        nuint lastValue = ~values[qSmall];
+        lastValue <<= (SmallBlockSize - rSmall - 1);
+        rank += (nuint)BitOperations.PopCount(lastValue);
 
         return rank;
     }
 
-    private static void CalculateInitialRank(
-        IReadOnlyList<nuint> ranks,
-        nuint bitPositionCutoff,
-        ref nuint rank,
-        out int qLarge)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public nuint SelectSetBits(nuint bitCountCutoff)
     {
-        qLarge = (int)bitPositionCutoff / LargeBlockSize;
-        rank = ranks[qLarge];
+        if (bitCountCutoff >= SetBitsCount)
+            return _size;
+
+        return SelectSetBits(bitCountCutoff, _ranks, _values);
     }
 
-    private static void CalculateRankSetBits(
-        IReadOnlyList<nuint> values,
-        nuint bitPositionCutoff,
-        int qLarge,
-        ref nuint rank)
-    {
-        GetBlockPositions(
-             position: bitPositionCutoff,
-             qSmall: out var qSmall,
-             rSmall: out var rSmall);
-
-        var begin = qLarge * BlockRate;
-
-        for (var j = begin; j < qSmall; j++)
-        {
-            rank += PopCount(values[j]);
-        }
-
-        rank += unchecked((uint)RankOfReversed(
-            value: values[qSmall],
-            bitPositionCutoff: rSmall + 1,
-            blockSize: SmallBlockSize));
-    }
-
-    private static void CalculateRankUnsetBits(
-        IReadOnlyList<nuint> values,
-        nuint bitPositionCutoff,
-        int qLarge,
-        ref nuint rank)
-    {
-        GetBlockPositions(
-            position: bitPositionCutoff,
-            qSmall: out var qSmall,
-            rSmall: out var rSmall);
-
-        var begin = qLarge * BlockRate;
-
-        rank = (nuint)(qLarge * LargeBlockSize) - rank;
-
-        for (var j = begin; j < qSmall; j++)
-        {
-            rank += PopCount(~values[j]);
-        }
-
-        rank += unchecked((uint)RankOfReversed(
-            value: ~values[qSmall],
-            bitPositionCutoff: rSmall + 1,
-            blockSize: SmallBlockSize));
-    }
-
-    internal static nuint SelectSetBits(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nuint SelectSetBits(
         nuint bitCountCutoff,
-        IReadOnlyList<nuint> ranks,
-        IReadOnlyList<nuint> values)
+        ImmutableArray<nuint> ranks,
+        ImmutableArray<nuint> values)
     {
+        // Binary search over rank samples
         int left = 0;
-        int right = ranks.Count;
+        int right = ranks.Length;
+        
         while (left < right)
         {
-            int pivot = left + right >> 1;
-            var rank = ranks[pivot];
-
-            if (bitCountCutoff < rank)
-            {
+            int pivot = (left + right) >> 1;
+            
+            if (bitCountCutoff < ranks[pivot])
                 right = pivot;
-            }
             else
-            {
                 left = pivot + 1;
-            }
         }
         right--;
 
         bitCountCutoff -= ranks[right];
         int j = right * BlockRate;
+        
+        // Linear scan through blocks
         while (true)
         {
-            uint rank = PopCount(values[j]);
+            uint rank = (uint)BitOperations.PopCount(values[j]);
 
             if (bitCountCutoff < rank)
-            {
                 break;
-            }
+            
             j++;
             bitCountCutoff -= rank;
         }
 
-        return (nuint)(j * SmallBlockSize + SelectOfReversed(
-            values[j],
-            (int)bitCountCutoff));
+        return (nuint)(j * SmallBlockSize + SelectOfReversed(values[j], (int)bitCountCutoff));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint SelectSetBits(nuint bitCountCutoff)
-        => bitCountCutoff >= SetBitsCount
-            ? _size
-            : SelectSetBits(
-            bitCountCutoff: bitCountCutoff,
-            ranks: _ranks,
-            values: _values);
+    public nuint SelectUnsetBits(nuint bitCountCutoff)
+    {
+        if (bitCountCutoff >= UnsetBitsCount)
+            return _size;
 
-    internal static nuint SelectUnsetBits(
+        return SelectUnsetBitsOptimized(bitCountCutoff, _ranks, _values);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static nuint SelectUnsetBitsOptimized(
         nuint bitCountCutoff,
-        IReadOnlyList<nuint> ranks,
-        IReadOnlyList<nuint> values)
+        ImmutableArray<nuint> ranks,
+        ImmutableArray<nuint> values)
     {
         int left = 0;
-        int right = ranks.Count;
+        int right = ranks.Length;
+        
         while (left < right)
         {
-            int pivot = left + right >> 1;
-            var rank = ranks[pivot];
-            rank = (nuint)(pivot * LargeBlockSize) - rank;
+            int pivot = (left + right) >> 1;
+            nuint rank = (nuint)(pivot * LargeBlockSize) - ranks[pivot];
+            
             if (bitCountCutoff < rank)
-            {
                 right = pivot;
-            }
             else
-            {
                 left = pivot + 1;
-            }
         }
         right--;
 
         bitCountCutoff -= (nuint)(right * LargeBlockSize) - ranks[right];
         int j = right * BlockRate;
+        
         while (true)
         {
-            var rank = PopCount(~values[j]);
+            uint rank = (uint)BitOperations.PopCount(~values[j]);
 
-            if (bitCountCutoff < rank) { break; }
+            if (bitCountCutoff < rank)
+                break;
+            
             j++;
             bitCountCutoff -= rank;
         }
 
-        return (nuint)(j * SmallBlockSize + SelectOfReversed(
-            ~values[j],
-            (int)bitCountCutoff));
+        return (nuint)(j * SmallBlockSize + SelectOfReversed(~values[j], (int)bitCountCutoff));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public nuint SelectUnsetBits(nuint bitCountCutoff)
-        => bitCountCutoff >= UnsetBitsCount
-            ? _size
-            : SelectUnsetBits(
-                bitCountCutoff: bitCountCutoff,
-                ranks: _ranks,
-                values: _values);
+    // =========================================================================
+    // Serialization
+    // =========================================================================
 
     public static SuccinctBits Read(BinaryReader reader)
     {
@@ -304,17 +252,11 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
 
         var vSize = reader.ReadInt32();
         Span<nuint> values = stackalloc nuint[vSize];
-
-        ReadNUInt(
-            buffer: values,
-            reader: reader);
+        ReadNUInt(values, reader);
 
         var rSize = reader.ReadInt32();
         Span<nuint> ranks = stackalloc nuint[rSize];
-
-        ReadNUInt(
-            buffer: ranks,
-            reader: reader);
+        ReadNUInt(ranks, reader);
 
         return new SuccinctBits(
             size,
@@ -326,10 +268,7 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     public static SuccinctBits Read(string filename)
     {
         using var reader = new BinaryReader(
-            new FileStream(
-                filename,
-                FileMode.Open,
-                FileAccess.Read));
+            new FileStream(filename, FileMode.Open, FileAccess.Read));
         return Read(reader);
     }
 
@@ -339,22 +278,12 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
         writer.Write(GetUIntLittleEndian(_setBitsCount));
 
         var vSize = _values.Length;
-
         writer.Write(vSize);
-
-        WriteNUInt(
-            buffer: _values,
-            cutoff: vSize,
-            writer: writer);
+        WriteNUInt(_values, vSize, writer);
 
         var rSize = _ranks.Length;
-
         writer.Write(rSize);
-
-        WriteNUInt(
-            buffer: _ranks,
-            cutoff: rSize,
-            writer: writer);
+        WriteNUInt(_ranks, rSize, writer);
     }
 
     public void Write(string filename)
@@ -367,14 +296,10 @@ public readonly struct SuccinctBits : IBitsContainer, ISerializableBits<Succinct
     public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
-        {
             return false;
-        }
 
         var bits = (SuccinctBits)obj;
-        return _size == bits._size && Enumerable.SequenceEqual(
-            _values,
-            bits._values);
+        return _size == bits._size && _values.SequenceEqual(bits._values);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

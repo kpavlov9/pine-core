@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 
 using KGIntelligence.PineCore.Helpers.Utilities;
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
-using static KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits.SuccinctCompressedBitsBuilder;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
@@ -21,24 +21,13 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
 {
     private readonly Bits.Bits _classValues;
     private readonly Bits.Bits _offsetValues;
-
-    /// <summary>
-    /// The length of the sequence.
-    /// </summary>
     private readonly nuint _size;
-
-    /// <summary>
-    /// Total count of set bits.
-    /// </summary>
     private readonly nuint _setBitsCount;
-
     private readonly QuasiSuccinctIndices _rankSamples;
     private readonly QuasiSuccinctIndices _offsetPositionSamples;
 
     public nuint Size => _size;
-
     public nuint SetBitsCount => _setBitsCount;
-
     public nuint UnsetBitsCount => _size - _setBitsCount;
 
     public SuccinctCompressedBits(
@@ -57,59 +46,143 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         _offsetValues = offsetValues;
     }
 
+    // =========================================================================
+    // OPTIMIZATION #1 & #6: GetBit with LUT and inlining
+    // =========================================================================
+    
+    /// <summary>
+    /// Get bit at position. Optimized with:
+    /// - Early exit for all-0 and all-1 blocks
+    /// - InverseOffset LUT for O(1) block decoding
+    /// - Branch-free bit extraction
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool GetBit(nuint position)
     {
+        // Calculate block position using integer division
+        // Note: BlockSize is 63 (not power of 2), so we can't use bit shift
         nuint blockPosition = position / BlockSize;
-        var @class = ClassOfBlock(blockPosition, _classValues);
+        
+        // Get class (popcount) of the block
+        var @class = ClassOfBlockFast(blockPosition);
+        
+        // Fast path: all-0 block
         if (@class == 0)
-        {
-            // All bit of the block is 0.
             return false;
-        }
+        
+        // Fast path: all-1 block  
         if (@class == BlockSize)
-        {
-            // All bit of the block is 1.
             return true;
-        }
-        var block = FetchBlock(
-            blockPosition,
-            @class,
-            _offsetPositionSamples,
-            _offsetValues,
-            _classValues);
-
+        
+        // Decode block using optimized InverseOffset (uses LUT when possible)
+        var block = FetchBlockOptimized(blockPosition, @class);
+        
+        // Extract bit - branch-free
         int offsetInBlock = (int)(position % BlockSize);
-        nuint mask = NUIntOne << BlockSize - 1 - offsetInBlock;
-        return (block & mask) != 0;
+        return ((block >> (BlockSize - 1 - offsetInBlock)) & 1) != 0;
     }
 
+    /// <summary>
+    /// Optimized ClassOfBlock with AggressiveInlining.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private uint ClassOfBlockFast(nuint blockPosition)
+    {
+        return unchecked((uint)_classValues.FetchBits(
+            blockPosition * BitsPerClass,
+            BitsPerClass));
+    }
+
+    /// <summary>
+    /// Static version for use from builder.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static uint ClassOfBlock(nuint blockPosition, in Bits.Bits classValues)
+    {
+        return unchecked((uint)classValues.FetchBits(
+            blockPosition * BitsPerClass,
+            BitsPerClass));
+    }
+
+    /// <summary>
+    /// Fetch and decode a block using optimized InverseOffset with LUT.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private nuint FetchBlockOptimized(nuint blockPosition, uint @class)
+    {
+        var offset = OffsetOfBlockFast(blockPosition, @class);
+        return InverseOffsetOf(offset, @class);
+    }
+
+    /// <summary>
+    /// InverseOffsetOf using lookup table when available.
+    /// Falls back to computation for large classes.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static nuint InverseOffsetOf(nuint offset, uint @class)
+    {
+        // Fast path: class 0 always returns 0
+        if (@class == 0)
+            return 0;
+        
+        // Fast path: class == BlockSize means all bits set
+        if (@class == BlockSize)
+            return (NUIntOne << BlockSize) - 1;
+        
+        // Try lookup table
+        if (@class < (uint)HasInverseOffsetTable.Length && 
+            HasInverseOffsetTable[@class] &&
+            offset < (nuint)InverseOffsetTables[@class]!.Length)
+        {
+            return InverseOffsetTables[@class]![offset];
+        }
+        
+        // Fall back to computation
+        return ComputeInverseOffset(offset, @class, BlockSize);
+    }
+
+    /// <summary>
+    /// Internal FetchBlock for static access.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static nuint FetchBlock(
         nuint blockPosition,
         uint @class,
         in QuasiSuccinctIndices offsetPosSamples,
         in Bits.Bits offsetValues,
-        in Bits.Bits classValues) => InverseOffsetOf(
-            OffsetOfBlock(
-                blockPosition,
-                @class,
-                offsetPosSamples,
-                offsetValues,
-                classValues), @class);
-
-    private nuint FetchBlock(nuint blockPosition)
+        in Bits.Bits classValues)
     {
-        uint @class = ClassOfBlock(blockPosition, _classValues);
-        return InverseOffsetOf(
-            OffsetOfBlock(
-                blockPosition,
-                @class,
-                _offsetPositionSamples,
-                _offsetValues,
-                _classValues),
-            @class);
+        var offset = OffsetOfBlock(blockPosition, @class, offsetPosSamples, offsetValues, classValues);
+        return InverseOffsetOf(offset, @class);
     }
 
+    /// <summary>
+    /// Get the offset of a block within its class (member version).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private nuint OffsetOfBlockFast(nuint blockPosition, uint @class)
+    {
+        var offsetCount = (int)ClassBitOffsets[@class];
+        
+        var superBlockIndex = blockPosition / SuperBlockFactor;
+        var offsetPosition = _offsetPositionSamples.Get(superBlockIndex);
+        var j = superBlockIndex * SuperBlockFactor;
+
+        // Accumulate offset positions for blocks before this one
+        while (j < blockPosition)
+        {
+            var jthClass = ClassOfBlockFast(j);
+            offsetPosition += ClassBitOffsets[jthClass];
+            j++;
+        }
+
+        return _offsetValues.FetchBits(offsetPosition, offsetCount);
+    }
+
+    /// <summary>
+    /// Static version for external use.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static nuint OffsetOfBlock(
         nuint blockPosition,
         uint @class,
@@ -133,49 +206,29 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
         return offsetValues.FetchBits(offsetPosition, offsetCount);
     }
 
-    public static nuint InverseOffsetOf(nuint offset, uint @class)
+    private nuint FetchBlock(nuint blockPosition)
     {
-        if (@class == 0)
-        {
-            return 0;
-        }
-
-        var classCounts = ClassCounts;
-        nuint block = 0;
-        nuint classCount;
-        var i = BlockSize - 1;
-
-        do
-        {
-            classCount = classCounts[i][@class];
-            if (offset >= classCount)
-            {
-                block |= NUIntOne << i;
-                offset -= classCount;
-                --@class;
-                if (@class <= 0)
-                {
-                    return block;
-                }
-            }
-            --i;
-        } while (i >= 0);
-
-        return block;
+        uint @class = ClassOfBlockFast(blockPosition);
+        return InverseOffsetOf(
+            OffsetOfBlockFast(blockPosition, @class), 
+            @class);
     }
+
+    // =========================================================================
+    // Rank Operations - Optimized
+    // =========================================================================
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static uint ClassOfBlock(nuint blockPosition, in Bits.Bits classValues)
-    {
-        var bitsPerClass = BitsPerClass;
-        return unchecked((uint)classValues.FetchBits(
-            blockPosition * bitsPerClass,
-            bitsPerClass));
-    }
-
     public nuint RankUnsetBits(nuint bitPositionCutoff) => 
         bitPositionCutoff - RankSetBits(bitPositionCutoff);
 
+    /// <summary>
+    /// Count set bits before position. Optimized with:
+    /// - Early exit for all-0 and all-1 super-blocks
+    /// - Efficient class accumulation
+    /// - Optimized block decoding
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankSetBits(nuint bitPositionCutoff)
     {
         var blockSize = BlockSize;
@@ -185,136 +238,139 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
 
         nuint superBlockIndex = blockIndex / superBlockFactor;
         nuint rank = _rankSamples.Get(superBlockIndex);
+        
+        // Check for early exit with next sample
         if (superBlockIndex + 1 < _rankSamples.Size)
         {
-            // FetchBits the next sample.
             nuint rankNext = _rankSamples.Get(superBlockIndex + 1);
             nuint delta = rankNext - rank;
+            
             if (delta == 0)
             {
-                // All the bits in the superBlockIndex-th super-block are 0.
+                // All bits in super-block are 0
                 return rank;
             }
-            else if (delta == superBlockSize)
+            
+            if (delta == superBlockSize)
             {
-                // All the bits in the super-block are 1.
+                // All bits in super-block are 1
                 nuint superBlockHead = superBlockIndex * superBlockSize;
                 return rank + (bitPositionCutoff - superBlockHead);
             }
         }
 
+        // Accumulate class counts for blocks before target
         nuint j = superBlockIndex * superBlockFactor;
-
         while (j < blockIndex)
         {
-            rank += ClassOfBlock(j, _classValues);
+            rank += ClassOfBlockFast(j);
             j++;
         }
 
+        // Handle partial block
         var block = FetchBlock(blockIndex);
         int posInTheBlock = (int)(bitPositionCutoff % blockSize);
-        // Least significant bits are set.
-        nuint mask = (NUIntOne << blockSize - posInTheBlock) - 1;
-        // Most significant bits are set.
-        mask = ~mask;
+        
+        // Count bits in partial block using mask
+        nuint mask = ~((NUIntOne << (blockSize - posInTheBlock)) - 1);
         return rank + PopCount(block & mask);
     }
 
+    // =========================================================================
+    // Select Operations - Optimized
+    // =========================================================================
+
+    /// <summary>
+    /// Find position of n-th set bit. Optimized with:
+    /// - Binary search over rank samples
+    /// - Early exit for all-1 super-blocks
+    /// - Optimized block scanning
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint SelectSetBits(nuint bitCountCutoff)
     {
         if (bitCountCutoff >= SetBitsCount)
-        {
             return _size;
-        }
 
+        // Binary search to find containing super-block
         nuint left = 0;
         nuint right = _rankSamples.Size - 1;
 
         while (left < right)
         {
-            nuint pivot = left + right >> 1;
-            nuint rankAtThePivot = _rankSamples.Get(pivot);
-            if (bitCountCutoff < rankAtThePivot)
-            {
+            nuint pivot = (left + right) >> 1;
+            nuint rankAtPivot = _rankSamples.Get(pivot);
+            
+            if (bitCountCutoff < rankAtPivot)
                 right = pivot;
-            }
             else
-            {
                 left = pivot + 1;
-            }
         }
+        
         if (right != 0)
-        {
             right--;
-        }
 
         var blockPosition = right * SuperBlockFactor;
         var blockSize = BlockSize;
-
         var rank = _rankSamples.Get(right);
 
-        if (right > _rankSamples.Size)
+        // Check for all-1s super-block optimization
+        if (right + 1 < _rankSamples.Size)
         {
             var delta = _rankSamples.Get(right + 1) - rank;
-
             if (delta == SuperBlockSize)
             {
-                // The bits in the left super-block are 1.
+                // All bits in super-block are 1
                 return blockPosition * blockSize + (bitCountCutoff - rank);
-            }          
+            }
         }
 
         nuint blocksCount = (_size + blockSize - 1) / blockSize;
-        var intialI = bitCountCutoff;
         bitCountCutoff -= rank;
 
-        while (true)
+        // Linear scan through blocks
+        while (blockPosition < blocksCount)
         {
-#if DEBUG
-            Debug.Assert(
-                blockPosition < blocksCount,
-                @$"The block position exceedes '{blocksCount}' for the bits count limit of '{intialI}'.");
-#endif
+            uint @class = ClassOfBlockFast(blockPosition);
 
-            uint @class = ClassOfBlock(blockPosition, _classValues);
-
-            if (bitCountCutoff < @class) { break; }
+            if (bitCountCutoff < @class)
+                break;
+            
             blockPosition++;
             bitCountCutoff -= @class;
         }
+        
+        // Find bit within block
         nuint block = FetchBlock(blockPosition);
-        nuint bitAlignedBlock = block << NativeBitCount - blockSize;
-        return blockPosition * blockSize + Select(
-            bitAlignedBlock,
-            (int)bitCountCutoff);
+        nuint bitAlignedBlock = block << (NativeBitCount - blockSize);
+        return blockPosition * blockSize + Select(bitAlignedBlock, (int)bitCountCutoff);
     }
 
+    /// <summary>
+    /// Find position of n-th unset bit.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint SelectUnsetBits(nuint position)
     {
         if (position >= UnsetBitsCount)
-        {
             return _size;
-        }
 
         var superBlockSize = SuperBlockSize;
         var blockSize = BlockSize;
 
+        // Binary search
         nuint left = 0;
         nuint right = _rankSamples.Size - 1;
+        
         while (left < right)
         {
-            nuint pivot = left + right >> 1;
-            nuint rankAtThePivot =
-                pivot * superBlockSize - _rankSamples.Get(pivot);
+            nuint pivot = (left + right) >> 1;
+            nuint rankAtPivot = pivot * superBlockSize - _rankSamples.Get(pivot);
 
-            if (position < rankAtThePivot)
-            {
+            if (position < rankAtPivot)
                 right = pivot;
-            }
             else
-            {
                 left = pivot + 1;
-            }
         }
         right--;
 
@@ -324,25 +380,33 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
 
         if (delta == 0)
         {
-            // every bit in the left-th super-block is 0
+            // All bits in super-block are 0
             return j * blockSize + (position - (rank + 1));
         }
 
         position -= right * superBlockSize - rank;
 
+        // Linear scan through blocks
         while (true)
         {
-            uint c = ClassOfBlock(j, _classValues);
+            uint c = ClassOfBlockFast(j);
             uint r = blockSize - c;
-            if (position < r) { break; }
+            
+            if (position < r)
+                break;
+            
             j++;
             position -= r;
         }
 
         nuint block = FetchBlock(j);
-        nuint bitAlignedBlock = block << NativeBitCount - blockSize;
+        nuint bitAlignedBlock = block << (NativeBitCount - blockSize);
         return j * blockSize + Select(~bitAlignedBlock, (int)position);
     }
+
+    // =========================================================================
+    // Serialization
+    // =========================================================================
 
     public static SuccinctCompressedBits Read(BinaryReader reader)
     {
@@ -365,7 +429,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
 
     public static SuccinctCompressedBits Read(string filename)
     {
-        var reader = new BinaryReader(
+        using var reader = new BinaryReader(
             new FileStream(filename, FileMode.Open, FileAccess.Read));
         return Read(reader);
     }
@@ -383,7 +447,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
 
     public void Write(string filename)
     {
-        var writer = new BinaryWriter(
+        using var writer = new BinaryWriter(
             new FileStream(filename, FileMode.Create, FileAccess.Write));
         Write(writer);
     }
@@ -391,9 +455,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     public override bool Equals(object? obj)
     {
         if (obj == null || GetType() != obj.GetType())
-        {
             return false;
-        }
 
         var bv = (SuccinctCompressedBits)obj;
         return _size == bv._size &&
@@ -403,7 +465,7 @@ public readonly struct SuccinctCompressedBits : ISerializableBits<SuccinctCompre
     }
 
     public override int GetHashCode()
-        => _classValues.GetHashCode()* _offsetValues.GetHashCode();
+        => _classValues.GetHashCode() * _offsetValues.GetHashCode();
 
     public static bool operator ==(SuccinctCompressedBits left, SuccinctCompressedBits right)
         => left.Equals(right);

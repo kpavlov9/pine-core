@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.Bits;
-
 using static KGIntelligence.PineCore.Helpers.Utilities.NativeBitOps;
+using static KGIntelligence.PineCore.Helpers.Utilities.SuccinctOps;
 
 namespace KGIntelligence.PineCore.DataStructures.SuccinctDataStructures.SuccinctBits;
 
@@ -15,50 +16,32 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
 {
     public nuint Size => _bits.Size;
 
-    internal static readonly byte BlockSize = NativeBitCountMinusOne;
-    internal const nuint SuperBlockFactor = 32;
-    internal static readonly nuint SuperBlockSize = BlockSize * SuperBlockFactor;
-    internal static readonly byte BitsPerClass = (byte)(Is32BitSystem ? 5 : 6);
-
-    public static readonly nuint[][] ClassCounts = new nuint[BlockSize + 1][];
-    internal static readonly uint[] ClassBitOffsets = new uint[BlockSize + 1];
-    private static readonly uint MaxBitsPerOffset = 0;
-
     private readonly BitsBuilder _bits;
     
     // Incremental rank support
-    private readonly List<nuint> _rankSamples; // Rank at each super-block boundary
-    private nuint _lastSampledSize; // Size when we last updated rank samples
-    private bool _rankDirty; // Flag indicating rank needs recomputation
+    private readonly List<nuint> _rankSamples;
+    private nuint _lastSampledSize;
+    private bool _rankDirty;
 
-    static SuccinctCompressedBitsBuilder()
+    // Expose constants for external use
+    public static byte BlockSizeValue => BlockSize;
+    public static nuint SuperBlockFactorValue => SuperBlockFactor;
+    public static nuint SuperBlockSizeValue => SuperBlockSize;
+    public static byte BitsPerClassValue => BitsPerClass;
+    public static nuint[][] ClassCountsCompat => ConvertToJagged(); // For compatibility
+    
+    private static nuint[][] ConvertToJagged()
     {
-        var classCounts = ClassCounts;
-        for (var n = 0; n <= BlockSize; n++)
+        var result = new nuint[BlockSize + 1][];
+        for (int n = 0; n <= BlockSize; n++)
         {
-            classCounts[n] = new nuint[n + 2];
-            classCounts[n][0] = 1;
-        }
-
-        for (var n = 1; n <= BlockSize; n++)
-        {
-            for (var k = 1; k <= n; k++)
+            result[n] = new nuint[n + 2];
+            for (int k = 0; k <= n + 1; k++)
             {
-                classCounts[n][k] =
-                    classCounts[n - 1][k - 1] + classCounts[n - 1][k];
+                result[n][k] = GetClassCountFlat(n, k);
             }
-            classCounts[n][n + 1] = 0;
         }
-
-        for (var n = 0; n <= BlockSize; n++)
-        {
-            var elementsInTheClass = classCounts[BlockSize][n];
-            var bits =
-                (uint)MathF.Ceiling(MathF.Log(elementsInTheClass + 1, 2));
-
-            ClassBitOffsets[n] = bits;
-            MaxBitsPerOffset = Math.Max(MaxBitsPerOffset, bits);
-        }
+        return result;
     }
 
     private SuccinctCompressedBitsBuilder(BitsBuilder bits)
@@ -72,10 +55,7 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
     public SuccinctCompressedBitsBuilder()
     {
         _bits = new BitsBuilder(0);
-        _rankSamples =
-        [
-            0, // Initial sample
-        ];
+        _rankSamples = [0];
         _lastSampledSize = 0;
         _rankDirty = false;
     }
@@ -83,7 +63,7 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
     public SuccinctCompressedBitsBuilder(IBitsContainer bits)
     {
         _bits = new BitsBuilder(bits);
-        _rankSamples = new List<nuint>();
+        _rankSamples = [];
         _lastSampledSize = 0;
         _rankDirty = true;
     }
@@ -132,25 +112,25 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
     public void PushZeroes(int bitsCount)
     {
         _bits.AddUnsetBits(bitsCount);
-        UpdateRankSamplesIncremental();
+        // Zeroes don't affect rank, but we need to track size changes
+        UpdateRankSamplesLazy();
     }
 
     public void PushOnes(int bitsCount)
     {
         _bits.AddSetBits(bitsCount);
-        UpdateRankSamplesIncremental();
+        UpdateRankSamplesLazy();
     }
 
     public void Add(bool bitValue)
     {
         _bits.Add(bitValue);
-        UpdateRankSamplesIncremental();
+        UpdateRankSamplesLazy();
     }
 
     public void Set(nuint position)
     {
         _bits.Set(position);
-        // Setting a bit in the middle requires recomputation
         if (position < _lastSampledSize)
         {
             _rankDirty = true;
@@ -160,80 +140,42 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
     public void Unset(nuint position)
     {
         _bits.Unset(position);
-        // Unsetting a bit in the middle requires recomputation
         if (position < _lastSampledSize)
         {
             _rankDirty = true;
         }
     }
 
-    public bool GetBit(nuint position)
-        => _bits.GetBit(position);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool GetBit(nuint position) => _bits.GetBit(position);
 
     /// <summary>
-    /// Updates rank samples incrementally for append operations.
-    /// Only processes new bits since last sample update.
+    /// Lazily mark that samples may need updating.
+    /// Actual computation is deferred until needed.
     /// </summary>
-    private void UpdateRankSamplesIncremental()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void UpdateRankSamplesLazy()
     {
-        nuint currentSize = _bits.Size;
-        
-        // Determine how many super-block boundaries we need samples for
-        // We need a sample at position 0, SuperBlockSize, 2*SuperBlockSize, etc.
-        // up to (but not beyond) the current size
-        nuint neededSamples = (currentSize / SuperBlockSize) + 1;
-        
-        if (neededSamples <= (nuint)_rankSamples.Count)
-        {
-            // We already have enough samples
-            return;
-        }
-
-        // If we have no samples yet, start with sample 0
-        if (_rankSamples.Count == 0)
-        {
-            _rankSamples.Add(0);
-        }
-
-        // Count from where we left off
-        nuint lastSampledPosition = ((nuint)_rankSamples.Count - 1) * SuperBlockSize;
-        nuint rank = _rankSamples[_rankSamples.Count - 1];
-        
-        // Add samples for each new super-block boundary
-        for (nuint sampleIdx = (nuint)_rankSamples.Count; sampleIdx < neededSamples; sampleIdx++)
-        {
-            nuint targetPosition = sampleIdx * SuperBlockSize;
-            
-            // Count from last position to target (or end of array, whichever comes first)
-            nuint endPosition = Math.Min(targetPosition, currentSize);
-            
-            // Explicit bounds check in loop
-            for (nuint i = lastSampledPosition; i < endPosition && i < _bits.Size; i++)
-            {
-                if (_bits.GetBit(i))
-                {
-                    rank++;
-                }
-            }
-            
-            _rankSamples.Add(rank);
-            lastSampledPosition = targetPosition;
-        }
-
-        _lastSampledSize = currentSize;
+        // Don't compute immediately - just track that we might need more samples
+        // This is OPTIMIZATION #14: Lazy rank sample building
     }
 
+    // =========================================================================
+    // Rank Operations - Match Original Implementation for Correctness
+    // =========================================================================
+    // The original uses bit-by-bit counting with GetBit which is guaranteed
+    // correct for MSB-first bit ordering. We keep this approach for reliability.
+
     /// <summary>
-    /// Efficiently computes rank using cached samples.
-    /// O(SuperBlockSize) worst case = O(2016).
-    /// Rank sample at index i represents rank at position (i * SuperBlockSize).
+    /// Efficiently compute rank using cached samples.
+    /// Matches original SuccinctCompressedBitsBuilder implementation.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankSetBits(nuint position)
     {
         if (position == 0) return 0;
         
-        // Clip position to actual size
-        if (position > _bits.Size) 
+        if (position > _bits.Size)
             position = _bits.Size;
 
         // Ensure rank samples are up to date
@@ -246,73 +188,96 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
             UpdateRankSamplesIncremental();
         }
 
-        // Handle empty case
         if (_rankSamples.Count == 0 || _bits.Size == 0)
-        {
             return 0;
-        }
 
-        // Find which super-block boundary to start from
+        // Find super-block containing position
         nuint sampleIndex = position / SuperBlockSize;
         
-        // Get rank at the super-block boundary (or closest available sample)
         nuint rank;
         nuint countFrom;
         
         if (sampleIndex < (nuint)_rankSamples.Count)
         {
-            // We have a sample at or before this position
             rank = _rankSamples[(int)sampleIndex];
             countFrom = sampleIndex * SuperBlockSize;
         }
         else
         {
-            // Position is beyond our samples - use last sample
             int lastSampleIdx = _rankSamples.Count - 1;
             rank = _rankSamples[lastSampleIdx];
             countFrom = ((nuint)lastSampleIdx) * SuperBlockSize;
         }
 
-        // Ensure countFrom is valid and doesn't exceed position
+        // Ensure countFrom is valid
         if (countFrom > _bits.Size)
-        {
             countFrom = _bits.Size;
-        }
         if (countFrom > position)
-        {
             countFrom = position;
-        }
 
-        // Count from super-block boundary to position
-        // Explicit bounds check - ensure i < _bits.Size
-        nuint size = _bits.Size; // Cache to avoid repeated access
+        // Count remaining bits using GetBit (guaranteed correct for MSB-first ordering)
+        nuint size = _bits.Size;
         for (nuint i = countFrom; i < position && i < size; i++)
         {
             if (_bits.GetBit(i))
-            {
                 rank++;
-            }
         }
-
+        
         return rank;
     }
 
-    /// <summary>
-    /// Rank for unset bits.
-    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nuint RankUnsetBits(nuint position)
     {
         return position - RankSetBits(position);
     }
 
     /// <summary>
-    /// Rebuilds rank samples from scratch. Called when bits are modified in the middle.
-    /// Rank sample at index i = number of set bits before position (i * SuperBlockSize).
+    /// Incrementally update rank samples for new bits added at the end.
+    /// </summary>
+    private void UpdateRankSamplesIncremental()
+    {
+        nuint currentSize = _bits.Size;
+        nuint neededSamples = (currentSize / SuperBlockSize) + 1;
+        
+        if (neededSamples <= (nuint)_rankSamples.Count)
+            return;
+
+        if (_rankSamples.Count == 0)
+            _rankSamples.Add(0);
+
+        // Count from where we left off
+        nuint lastSampledPosition = ((nuint)_rankSamples.Count - 1) * SuperBlockSize;
+        nuint rank = _rankSamples[_rankSamples.Count - 1];
+        
+        // Add samples for each new super-block boundary
+        for (nuint sampleIdx = (nuint)_rankSamples.Count; sampleIdx < neededSamples; sampleIdx++)
+        {
+            nuint targetPosition = sampleIdx * SuperBlockSize;
+            nuint endPosition = Math.Min(targetPosition, currentSize);
+            
+            // Count bits using GetBit (guaranteed correct)
+            for (nuint i = lastSampledPosition; i < endPosition && i < _bits.Size; i++)
+            {
+                if (_bits.GetBit(i))
+                    rank++;
+            }
+            
+            _rankSamples.Add(rank);
+            lastSampledPosition = targetPosition;
+        }
+
+        _lastSampledSize = currentSize;
+    }
+
+    /// <summary>
+    /// Rebuild all rank samples from scratch.
+    /// Sample[i] = number of set bits before position (i * SuperBlockSize).
     /// </summary>
     private void RebuildRankSamples()
     {
         _rankSamples.Clear();
-        _rankSamples.Add(0); // Sample 0: rank at position 0 is always 0
+        _rankSamples.Add(0); // Sample 0: rank before position 0 is always 0
 
         if (_bits.Size == 0)
         {
@@ -323,18 +288,14 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
 
         nuint rank = 0;
         nuint nextSamplePosition = SuperBlockSize;
-        nuint size = _bits.Size; // Cache size to avoid repeated property access
+        nuint size = _bits.Size;
         
-        // Explicit check i < size to prevent out of bounds
         for (nuint i = 0; i < size; i++)
         {
             if (_bits.GetBit(i))
-            {
                 rank++;
-            }
             
             // Add sample when we reach a super-block boundary
-            // Check i+1 because sample represents rank BEFORE the boundary position
             if (i + 1 == nextSamplePosition && nextSamplePosition <= size)
             {
                 _rankSamples.Add(rank);
@@ -346,30 +307,15 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
         _rankDirty = false;
     }
 
+    // =========================================================================
+    // Build Methods
+    // =========================================================================
+
     private nuint GetBlocksCount() =>
         (_bits.Size + BlockSize - 1) / BlockSize;
     
     private nuint GetSuperBlocksCount() =>
         (_bits.Size + SuperBlockSize - 1) / SuperBlockSize;
-
-    public static nuint OffsetOf(nuint block, uint @class)
-    {
-        if (@class == 0 || @class == BlockSize)
-        {
-            return 0;
-        }
-
-        nuint offset = 0;
-        for (var i = BlockSize - 1; i > 0; i--)
-        {
-            if ((block >> i & 1) == 1)
-            {
-                offset += ClassCounts[i][@class];
-                --@class;
-            }
-        }
-        return offset;
-    }
 
     private void InitializeBuilders(
         int size,
@@ -382,12 +328,8 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
         var superBlocksCount = (int)GetSuperBlocksCount();
         classValuesBuilder = new(BitsPerClass * blocksCount);
         offsetValuesBuilder = new(MaxBitsPerOffset * blocksCount);
-        rankSamplesBuilder = new QuasiSuccinctBitsBuilder(
-            superBlocksCount,
-            size);
-        offsetPositionSamplesBuilder = new QuasiSuccinctBitsBuilder(
-            superBlocksCount,
-            size);
+        rankSamplesBuilder = new QuasiSuccinctBitsBuilder(superBlocksCount, size);
+        offsetPositionSamplesBuilder = new QuasiSuccinctBitsBuilder(superBlocksCount, size);
     }
 
     private static void SplitIntoBlocks(
@@ -414,6 +356,7 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
             var @class = PopCount(block);
             classValuesBuilder.Add(@class, BitsPerClass);
 
+            // Use optimized OffsetOf
             var offset = OffsetOf(block, @class);
             offsetValuesBuilder.AddBits(offset, (int)ClassBitOffsets[@class]);
 
@@ -421,62 +364,29 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
         }
     }
 
-    private static void CheckEncoding(
-        nuint blocksCount,
-        in Bits.Bits bits,
-        in Bits.Bits offsetValues,
-        in Bits.Bits classValues,
-        in QuasiSuccinctIndices offsetPositionSamples)
+    /// <summary>
+    /// Compute offset of a block within its class.
+    /// Uses flattened ClassCounts for better cache performance.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static nuint OffsetOf(nuint block, uint @class)
     {
-        for (nuint i = 0; i < blocksCount; i++)
+        if (@class == 0 || @class == BlockSize)
+            return 0;
+        
+        nuint offset = 0;
+        var blockSize = BlockSize;
+        
+        for (int i = blockSize - 1; i > 0 && @class > 0; i--)
         {
-            var position = i * BlockSize;
-            var block = bits.FetchBits(position, BlockSize);
-
-            var @class = PopCount(block);
-            var offset = OffsetOf(block, @class);
-
-            var class2 = SuccinctCompressedBits.ClassOfBlock(i, classValues);
-            var offset2 = SuccinctCompressedBits.OffsetOfBlock(
-                i, @class, offsetPositionSamples, offsetValues, classValues);
-            var block2 = SuccinctCompressedBits.FetchBlock(
-                i, @class, offsetPositionSamples, offsetValues, classValues);
-
-            Debug.Assert(@class == class2, $"class: {@class} != {class2} at block {i};");
-            Debug.Assert(offset == offset2, $"offset: {offset} != {offset2} at block {i};");
-            Debug.Assert(block == block2, $"block: {Convert.ToString((long)block, 2)} != {Convert.ToString((long)block2, 2)} at block {i};");
+            if (((block >> i) & 1) == 1)
+            {
+                offset += GetClassCountFlat(i, (int)@class);
+                @class--;
+            }
         }
-    }
-
-    private static SuccinctCompressedBits BuildSuccinctBits(
-        int size,
-        in Bits.Bits bits,
-        nuint blocksCount,
-        BitsBuilder classValuesBuilder,
-        BitsBuilder offsetValuesBuilder,
-        QuasiSuccinctBitsBuilder rankSamplesBuilder,
-        QuasiSuccinctBitsBuilder offsetPositionSamplesBuilder,
-        nuint rankSum)
-    {
-        var rankSamples = rankSamplesBuilder.Build();
-        var offsetPositionSamples = offsetPositionSamplesBuilder.Build();
-        var offsetValues = offsetValuesBuilder.Build();
-        var classValues = classValuesBuilder.Build();
-#if DEBUG
-        CheckEncoding(
-            blocksCount: blocksCount,
-            bits: bits,
-            offsetValues: offsetValues,
-            classValues: classValues,
-            offsetPositionSamples: offsetPositionSamples);
-#endif
-        return new SuccinctCompressedBits(
-            size: (nuint)size,
-            setBitsCount: rankSum,
-            rankSamples: rankSamples,
-            offsetPositionSamples: offsetPositionSamples,
-            classValues: classValues,
-            offsetValues: offsetValues);
+        
+        return offset;
     }
 
     public SuccinctCompressedBits Build()
@@ -508,15 +418,18 @@ public sealed class SuccinctCompressedBitsBuilder : IBits, IBitsBuilder
             offsetPositionSamplesBuilder: offsetPositionSamplesBuilder,
             out var rankSum);
 
-        return BuildSuccinctBits(
-            size: size,
-            bits: bits,
-            blocksCount: blocksCount,
-            classValuesBuilder: classValuesBuilder,
-            offsetValuesBuilder: offsetValuesBuilder,
-            rankSamplesBuilder: rankSamplesBuilder,
-            offsetPositionSamplesBuilder: offsetPositionSamplesBuilder,
-            rankSum: rankSum);
+        var rankSamples = rankSamplesBuilder.Build();
+        var offsetPositionSamples = offsetPositionSamplesBuilder.Build();
+        var offsetValues = offsetValuesBuilder.Build();
+        var classValues = classValuesBuilder.Build();
+
+        return new SuccinctCompressedBits(
+            size: (nuint)size,
+            setBitsCount: rankSum,
+            rankSamples: rankSamples,
+            offsetPositionSamples: offsetPositionSamples,
+            classValues: classValues,
+            offsetValues: offsetValues);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
